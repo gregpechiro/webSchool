@@ -6,36 +6,60 @@
         <title>Account</title>
     </head>
     <body>
-        <nav class="navbar navbar-default">
-            <div class="container-fluid">
 
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="/">Web App</a>
-                </div>
-
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-
-                     <ul class="nav navbar-nav navbar-right">
-                         {{ if eq .session.ROLE "ADMIN" "DEVELOPER" }}
-                            <li><a href="/admin">Admin</a></li>
-                         {{ end }}
-                        <li><a href="/logout">Logout</a></li>
-                    </ul>
-
-                </div>
-            </div>
-        </nav>
+        {{ template "secure-navbar.tmpl" . }}
 
         <div class="container">
             <div class="row">
-                <div class="col-lg-12 col-xl-12 text-center">
-                    <h1>{{ .user.FirstName }} {{ .user.LastName }}'s Account Page</h1>
+                <div class="col-lg-offset-4 col-xl-offset-4 col-lg-4 col-xl-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            My Information
+                        </div>
+                        <div class="panel-body">
+                            <form class="form-horizontal" action="/account" method="post">
+                                <div class="form-group">
+                                    <label class="control-label col-xs-4">First Name</label>
+                                    <div class="col-xs-8">
+                                        <span class="text-danger">{{ getFormError .formErrors "account.firstName" }}</span>
+                                        <input class="form-control" type="text" name="firstName" value="{{ .user.FirstName }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-xs-4">Last Name</label>
+                                    <div class="col-xs-8">
+                                        <span class="text-danger">{{ getFormError .formErrors "account.lastName" }}</span>
+                                        <input class="form-control" type="text" name="lastName" value="{{ .user.LastName }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-xs-4">Email</label>
+                                    <div class="col-xs-8">
+                                        <span class="text-danger">{{ getFormError .formErrors "account.email" }}</span>
+                                        <input class="form-control" type="email" name="email" value="{{ .user.Email }}">
+                                    </div>
+                                </div>
+                                <!-- toggle show password input -->
+								<div class="form-group">
+									<label class="control-label col-xs-4">Password</label>
+									<div class="col-xs-8">
+                                        <span class="text-danger">{{ getFormError .formErrors "account.password" }}</span>
+                                        <span class="text-danger capsWarn hide">Caps Lock is On</span>
+										<div class="input-group">
+											<input type="password" id="password" name="password" class="form-control toggle-pass" placeholder="Password"/>
+											<span class="input-group-btn">
+												<button type="button" class="btn btn-default toggle-pass" data-toggle="tooltip" data-placement="right" title="Click to show/hide your password">
+													<i class="fa fa-eye-slash"></i>
+												</button>
+											</span>
+										</div>
+									</div>
+								</div>
+								<!-- toggle show password input -->
+                                <button class="btn btn-success btn-block">Update</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -43,6 +67,10 @@
         {{ template "scripts.tmpl" . }}
 
         {{ template "session.tmpl" . }}
+
+        <script src="/static/js/toggle-password.js" charset="utf-8"></script>
+
+        <script src="/static/js/caps.js" charset="utf-8"></script>
 
     </body>
 </html>

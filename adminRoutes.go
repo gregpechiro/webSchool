@@ -11,7 +11,7 @@ var adminHome = web.Route{"GET", "/admin", func(w http.ResponseWriter, r *http.R
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
-		web.SetErrorRedirect(w, r, "/login", "Error retrieving user")
+		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 		return
 	}
 	tmpl.Render(w, r, "admin.tmpl", web.Model{

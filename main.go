@@ -21,10 +21,11 @@ func init() {
 	mux = web.NewMux()
 
 	// unsecure routes
-	mux.AddRoutes(home, register, login, logout, loginPost)
+	mux.AddRoutes(home, register, login, logout, loginPost, updateSession)
 
 	// user routes
-	mux.AddSecureRoutes(USER, account)
+	mux.AddSecureRoutes(USER, project, projectNew, account, accountSave)
+	mux.AddSecureRoutes(USER, projectRename, projectView, projectFiles, projectFile, projectFolderNew, projectFileNew, projectFileDel, projectFileMove)
 
 	// admin routes
 	mux.AddSecureRoutes(ADMIN, adminHome)

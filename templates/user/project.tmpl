@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {{ template "head.tmpl" . }}
+
+        <style>
+            div.clickable {
+                cursor: pointer;
+            }
+            div.clickable:hover {
+                color: white;
+                background-color:#000;
+                opacity:0.3;
+            }
+        </style>
+
+        <title>Account</title>
+    </head>
+    <body>
+
+        {{ template "secure-navbar.tmpl" . }}
+
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 col-xl-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading clearfix">
+                            {{ .user.FirstName }} {{ .user.LastName }}'s Projects
+                            <form class="pull-right form-horizontal col-xs-3" action="/project" method="post">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" name="name" placeholder="Project Name">
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-default">Add</button>
+                                    </span>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="panel-body">
+                            {{ range $project := .projects}}
+                                <div class="col-lg-2 col-xs-2">
+                                    <div class="well well-sm clickable" data-url="/project/{{ $project.Name }}">
+                                        {{ $project.Name }}<br>
+                                        Project Size: {{ $project.Size }}<br>
+                                        Number of Files: {{ $project.NumFiles }}
+                                    </div>
+                                </div>
+                            {{ end }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{ template "scripts.tmpl" . }}
+
+        {{ template "session.tmpl" . }}
+
+        <script type="text/javascript">
+            $('div.clickable').click(function() {
+                window.location.href = this.getAttribute('data-url')
+            })
+        </script>
+
+    </body>
+</html>

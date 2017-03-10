@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {{ template "head.tmpl" . }}
+
+        <link href="//cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" rel="stylesheet" />
+
+        <script src="/static/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
+        <style media="screen">
+            .away {
+                width:100%;
+                height:30px;
+                padding: 5px 10px;
+                color: white;
+                background-color: grey;
+                cursor:pointer;
+            }
+
+            .navbar{
+                margin-bottom: 0;
+            }
+
+            .left {
+                position: relative;
+                float: left;
+                width: 15%;
+                height: 100%;
+                overflow-x: auto;
+                overflow-y: auto;
+            }
+
+            .right {
+                position: relative;
+                float: right;
+                width: 15%;
+                height: 100%;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
+            .middle {
+                height: 100%;
+                position: relative;
+                overflow:hidden;
+            }
+        </style>
+
+        <title>Account</title>
+    </head>
+    <body>
+
+        {{ template "secure-navbar.tmpl" . }}
+        <div class="left side" style="border:1px solid black;">
+            <div class="away" style="height:30px; background-color: grey; width:100%; cursor:pointer;">
+                <div class="content">
+                    {{ .project }}
+                </div>
+            </div>
+            <div class="content" id="filetree"></div>
+        </div>
+
+        <div class="right side"  style="border:1px solid black;">
+            <div class="away" style="height:30px; background-color: grey; width:100%; cursor:pointer;">
+                <div class="content">
+                    Settings
+                </div>
+            </div>
+        </div>
+        <div class="middle" style="border:1px solid black">
+            <!-- editor -->
+            <div id="editor" style="height:100%"></div>
+            <!-- editor -->
+        </div>
+
+        {{ template "scripts.tmpl" . }}
+
+        {{ template "session.tmpl" . }}
+
+        <div class="modal fade" id="newFileModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">New File</h4>
+                    </div>
+                    <div class="modal-body clearfix">
+                        <form class="form-horizontal" action="/project/{{ .project }}/addFile" method="post">
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Name</label>
+                                <div class="col-xs-10">
+                                    <input type="text" class="form-control" name="file">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <button class="btn btn-primary btn-block">Add</button>
+                                </div>
+                            </div>
+                            <input id="filePath" type="hidden" name="path">
+                            <input type="hidden" name="redirect" value="/project/{{ .project }}">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="newFolderModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">New Folder</h4>
+                    </div>
+                    <div class="modal-body clearfix">
+                        <form class="form-horizontal" action="/project/{{ .project }}/mkdir" method="post">
+                            <div class="form-group">
+                                <label class="control-label col-xs-2">Name</label>
+                                <div class="col-xs-10">
+                                    <input type="text" class="form-control" name="folder">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <button class="btn btn-primary btn-block">Add</button>
+                                </div>
+                            </div>
+                            <input id="folderPath" type="hidden" name="path">
+                            <input type="hidden" name="redirect" value="/project/{{ .project }}">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+
+        <script>
+
+            $('html, body').height(window.innerHeight - 52);
+
+            $('.away').click(function() {
+                parent = $(this).closest('.side');
+                if (parent.width() > 35) {
+                    parent.find('.content').addClass('hide');
+                    parent.width(35);
+                    return
+                }
+                parent.find('.content').removeClass('hide');
+                parent.width('15%');
+            });
+
+            var fileType;
+            var path;
+
+            var editor = ace.edit("editor");
+
+            $(document).ready(function() {
+                // setup ace editor
+                editor.session.setMode("ace/mode/html");
+                editor.setTheme('ace/theme/monokai');
+                editor.renderer.setShowGutter(true);
+                editor.setHighlightActiveLine(true);
+                editor.setReadOnly(false);
+                editor.setDisplayIndentGuides(true);
+                editor.setOption("scrollPastEnd", 1);
+                editor.renderer.setScrollMargin(15)
+                editor.$blockScrolling = Infinity
+                $('textarea.ace_text-input').focus();
+
+                // add key bindings to ace editor
+                editor.commands.addCommand({
+                    name: 'moveLineDown',
+                    bindKey: {win: 'Ctrl-down',  mac: 'Command-down'},
+                    exec: function(editor) {
+                        editor.moveLinesDown();
+                    },
+                    readOnly: false
+                });
+
+                editor.commands.addCommand({
+                    name: 'moveLineUp',
+                    bindKey: {win: 'Ctrl-up',  mac: 'Command-up'},
+                    exec: function(editor) {
+                        editor.moveLinesUp();
+                    },
+                    readOnly: false
+                });
+
+                editor.commands.addCommand({
+                    name: 'moveCursorUp',
+                    bindKey: {win: 'Alt-Shift-up',  mac: 'Alt-Shift-up'},
+                    exec: function(editor) {
+                        editor.selectMoreLines(-1);
+                    },
+                    readOnly: false
+                });
+
+                editor.commands.addCommand({
+                    name: 'moveCursorDown',
+                    bindKey: {win: 'Alt-Shift-down',  mac: 'Alt-Shift-down'},
+                    exec: function(editor) {
+                        editor.selectMoreLines(1);
+                    },
+                    readOnly: false
+                });
+
+                editor.commands.addCommand({
+                    name: "replace",
+                    bindKey: {win: "Ctrl-R", mac: "Command-Option-R"},
+                    exec: function(editor) {
+                        ace.config.loadModule("ace/ext/searchbox", function(e) {e.Search(editor, true)});
+                    }
+                });
+            });
+
+
+            var t;
+            $(document).ready(function() {
+                $('#filetree').on('select_node.jstree', function(e, data) {
+
+                    var evt = window.event || e;
+                    var button = evt.which || evt.button;
+                    if ( button != 1 ) {
+                        return;
+                    }
+
+                    var n = data.node;
+                    if (n.type === 'dir') {
+                        if (t.is_closed(n)) {
+                            t.open_node(n);
+                        } else {
+                            t.close_node(n);
+                        }
+                        return;
+                    }
+                    fileType = n.type;
+                    path = n.id;
+                    getFile(n.id);
+
+                }).on('move_node.jstree', function(e, data) {
+                    var frm = data.node.id;
+                    // var to  = data.parent + '/' + data.node.text;
+                    var to  = ((data.parent == "#") ? '/' + data.node.text : data.parent + '/' + data.node.text);
+                    if (frm !== to) {
+                        var form = $('<form method="post" class="hide" action="/project/{{ .project }}/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="mov"></form>')
+                        $('body').append(form);
+                        form.submit();
+                    }
+                }).jstree({
+                    "core" : {
+                        "multiple": false,
+                        "animation" : 0,
+                        "check_callback" : true,
+                        "themes" : {
+                            "stripes" : true
+                        },
+                        "data" : {
+                            "url" : function(node) {
+                                if (node.id == '#') {
+                                    return "/project/{{ .project }}/files";
+                                }
+                                return "/project/{{ .project }}/files?path=" + node.id;
+                            },
+                            "data" : function (node) {
+                                return node.id == "#" ? {} : { "id" : node.id }
+                            }
+                        }
+                    },
+                    "sort": function(n1, n2) {
+                        if (this.get_type(n1) != this.get_type(n2)) {
+                            if (this.get_type(n1) == "dir") {
+                                return -1
+                            }
+                            return 1
+                        }
+                        if (this.get_text(n1) <= this.get_text(n2)) {
+                            return -1
+                        }
+                        return 1
+                    },
+                    "types": {
+                        "#": {
+                            "max_children" : 1,
+                            "valid_children" : ["dir", "file"]
+                        },
+                        "dir" : {
+                            "icon" : "glyphicon glyphicon-folder-open",
+                            "valid_children" : ["dir", "file"]
+                        },
+                        "html" : {
+                            "icon" : "fa fa-file-code-o",
+                            "valid_children" : []
+                        },
+                        "css" : {
+                            "icon" : "fa fa-file-code-o",
+                            "valid_children" : []
+                        },
+                        "javascript" : {
+                            "icon" : "fa fa-file-code-o",
+                            "valid_children" : []
+                        }
+                    },
+                    "contextmenu" : {
+                        items : {
+                            "new" : {
+                                "separator_before"  : false,
+                                "separator_after"   : true,
+                                "label"             : "New",
+                                "action"            : false,
+                                "submenu" :{
+                                    "create_file" : {
+                                        "label" : "File",
+                                        action : function (obj) {
+                                            var n = t.get_node(obj.reference[0].id);
+                                            while (n.type !== 'dir' && n.id !== '#') {
+                                                n = t.get_node(n.parent);
+                                            }
+                                            $('input#filePath').val(n.id);
+                                            $('div#newFileModal').modal('show');
+                                        }
+                                    },
+                                    "create_folder" : {
+                                        "seperator_before" : false,
+                                        "seperator_after" : false,
+                                        "label" : "Folder",
+                                        action : function (obj) {
+                                            var n = t.get_node(obj.reference[0].id);
+                                            while (n.type !== 'dir' && n.id !== '#') {
+                                                n = t.get_node(n.parent);
+                                            }
+                                            $('input#folderPath').val(n.id);
+                                            $('div#newFolderModal').modal('show');
+                                        }
+                                    }
+                                }
+                            },
+                            "rename": {
+                                "separator_before"  : false,
+                                "separator_after"   : false,
+                                "label"             : "Rename",
+                                "action"            : function(obj) {
+                                    var n = t.get_node(obj.reference[0].id);
+                                    var old_name = n.text;
+                                    t.edit(n, 0, function(node, status, cancel) {
+                                        if (old_name == node.text) {
+                                            return
+                                        }
+                                        var frm = node.id;
+                                        var to  = ((node.parent == "#") ? '/' + node.text : node.parent + '/' + node.text);
+                                        if (frm !== to) {
+                                            var form = $('<form method="post" class="hide" action="/project/{{ .project }}/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="renam"></form>')
+                                            $('body').append(form);
+                                            form.submit();
+                                        }
+                                    });
+                                }
+                            },
+                            "delete" : {
+                                "separator_before"  : false,
+                                "separator_after"   : false,
+                                "label"             : "Delete",
+                                "action"            : function(obj) {
+                                    var n = t.get_node(obj.reference[0].id);
+                                    var msg = 'Are you sure you would like to delete this file?';
+                                    if (n.type === 'dir') {
+                                        msg = 'Are you sure you would like to delete this folder and ALL of it\'s contents?';
+                                    }
+                                    swal({
+                                        title: '',
+                                        text: msg,
+                                        type: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonColor: 'red',
+                                        confirmButtonText: "Yes",
+                                        closeOnConfirm: false
+                                    }, function(){
+                                        var form = $('<form method="post" class="hide" action="/project/{{ .project }}/file/del"><input name="path" value="' + n.id + '"></form>')
+                                        $('body').append(form);
+                                        form.submit();
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    "plugins" : [
+                        "contextmenu", "dnd", "search",
+                        "state", "types", "wholerow", "sort"
+                    ]
+                });
+                t = $('#filetree').jstree();
+            });
+
+            function getFile(id) {
+                $.ajax({
+                    url: '/project/{{ .project }}/file?path=' + id,
+                    method: 'GET',
+                    success: function(resp) {
+                        // check for returned error
+                        if (resp.error) {
+                            alert('error');
+                            return
+                        }
+                        // replace editor with formated code
+                        var file = atob(resp.output);
+                        f = resp.output
+                        editor.setValue(file, 1);
+                        editor.session.setMode("ace/mode/" + fileType);
+                        return
+                    },
+                    // display server error
+                    error: function(e, d) {
+                        alert('error');
+                        console.log(e);
+                        console.log(d);
+                        return
+                    }
+                });
+            }
+    	</script>
+
+    </body>
+</html>

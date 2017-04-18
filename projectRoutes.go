@@ -22,6 +22,7 @@ var projectView = web.Route{"GET", "/project/:name", func(w http.ResponseWriter,
 	tmpl.Render(w, r, "projectView.tmpl", web.Model{
 		"user":    user,
 		"project": r.FormValue(":name"),
+		"themes":  themes,
 	})
 	return
 }}

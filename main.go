@@ -30,9 +30,11 @@ func init() {
 	// admin routes
 	mux.AddSecureRoutes(ADMIN, adminHome)
 
+	web.Funcs["pretty"] = pretty
 	tmpl = web.NewTmplCache()
 
 	defaultUsers()
+
 }
 
 func main() {

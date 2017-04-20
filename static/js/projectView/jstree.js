@@ -9,20 +9,19 @@ $(document).ready(function() {
 
         var n = data.node;
         if (n.type === 'dir') {
-            if (t.is_closed(n)) {
-                t.open_node(n);
+            if (tree.is_closed(n)) {
+                tree.open_node(n);
             } else {
-                t.close_node(n);
+                tree.close_node(n);
             }
             return;
         }
-        fileType = n.type;
-        path = n.id;
+        /*fileType = n.type;
+        current = n.id;*/
         getFile(n.id);
 
     }).on('move_node.jstree', function(e, data) {
         var frm = data.node.id;
-        // var to  = data.parent + '/' + data.node.text;
         var to  = ((data.parent == "#") ? '/' + data.node.text : data.parent + '/' + data.node.text);
         if (frm !== to) {
             var form = $('<form method="post" class="hide" action="/project/' + project + '/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="mov"></form>')
@@ -30,10 +29,19 @@ $(document).ready(function() {
             form.submit();
         }
     }).jstree({
+        "plugins" : [
+            "contextmenu", "dnd", "search",
+            "state", "types", "wholerow", "sort"
+        ],
         "core" : {
-            "multiple": false,
+            "multiple": true,
             "animation" : 0,
-            "check_callback" : true,
+            "check_callback" : function(operation, node, node_parent, node_position, more) {
+                if (operation === "move_node") {
+                    return isSaved(node.id);
+                }
+                return true;
+            },
             "themes" : {
                 "stripes" : true
             },
@@ -61,14 +69,15 @@ $(document).ready(function() {
             }
             return 1
         },
+
         "types": {
             "#": {
                 "max_children" : 1,
-                "valid_children" : ["dir", "file"]
+                "valid_children" : ["dir", "file", "html", "css", "javascript"]
             },
             "dir" : {
                 "icon" : "glyphicon glyphicon-folder-open",
-                "valid_children" : ["dir", "file"]
+                "valid_children" : ["dir", "file", "html", "css", "javascript"]
             },
             "html" : {
                 "icon" : "fa fa-file-code-o",
@@ -83,6 +92,7 @@ $(document).ready(function() {
                 "valid_children" : []
             }
         },
+
         "contextmenu" : {
             items : {
                 "new" : {
@@ -94,9 +104,9 @@ $(document).ready(function() {
                         "create_file" : {
                             "label" : "File",
                             action : function (obj) {
-                                var n = t.get_node(obj.reference[0].id);
+                                var n = tree.get_node(obj.reference[0].id);
                                 while (n.type !== 'dir' && n.id !== '#') {
-                                    n = t.get_node(n.parent);
+                                    n = tree.get_node(n.parent);
                                 }
                                 $('input#filePath').val(n.id);
                                 $('div#newFileModal').modal('show');
@@ -107,9 +117,9 @@ $(document).ready(function() {
                             "seperator_after" : false,
                             "label" : "Folder",
                             action : function (obj) {
-                                var n = t.get_node(obj.reference[0].id);
+                                var n = tree.get_node(obj.reference[0].id);
                                 while (n.type !== 'dir' && n.id !== '#') {
-                                    n = t.get_node(n.parent);
+                                    n = tree.get_node(n.parent);
                                 }
                                 $('input#folderPath').val(n.id);
                                 $('div#newFolderModal').modal('show');
@@ -122,9 +132,13 @@ $(document).ready(function() {
                     "separator_after"   : false,
                     "label"             : "Rename",
                     "action"            : function(obj) {
-                        var n = t.get_node(obj.reference[0].id);
+                        var n = tree.get_node(obj.reference[0].id);
+                        if (!isSaved(n.id)) {
+                            $.Notification.autoHideNotify('error', 'top center', 'You have unsaved changes.<br>Please save before renaming.');
+                            return
+                        }
                         var old_name = n.text;
-                        t.edit(n, 0, function(node, status, cancel) {
+                        tree.edit(n, 0, function(node, status, cancel) {
                             if (old_name == node.text) {
                                 return
                             }
@@ -143,7 +157,7 @@ $(document).ready(function() {
                     "separator_after"   : false,
                     "label"             : "Delete",
                     "action"            : function(obj) {
-                        var n = t.get_node(obj.reference[0].id);
+                        var n = tree.get_node(obj.reference[0].id);
                         var msg = 'Are you sure you would like to delete this file?';
                         if (n.type === 'dir') {
                             msg = 'Are you sure you would like to delete this folder and ALL of it\'s contents?';
@@ -162,13 +176,19 @@ $(document).ready(function() {
                             form.submit();
                         });
                     }
+                },
+                "save" : {
+                    "separator_before"  : true,
+                    "separator_after"   : false,
+                    "label"             : "Save",
+                    "action"            : function(obj) {
+                        var n = tree.get_node(obj.reference[0].id);
+                        save(n.id);
+                    }
                 }
             }
-        },
-        "plugins" : [
-            "contextmenu", "dnd", "search",
-            "state", "types", "wholerow", "sort"
-        ]
+        }
     });
-    t = $('#filetree').jstree();
+
+    tree = $('#filetree').jstree();
 });

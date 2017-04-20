@@ -8,8 +8,8 @@ $(document).ready(function() {
     editor.setReadOnly(false);
     editor.setDisplayIndentGuides(true);
     editor.setOption("scrollPastEnd", 1);
-    editor.renderer.setScrollMargin(15)
-    editor.$blockScrolling = Infinity
+    editor.renderer.setScrollMargin(15);
+    editor.$blockScrolling = Infinity;
     $('textarea.ace_text-input').focus();
 
     // init settings from local storage
@@ -25,6 +25,10 @@ $(document).ready(function() {
         editor.setTheme('ace/theme/monokai');
         editor.setFontSize(12);
     }
+
+    editor.on('change', function() {
+        memFiles[current].update();
+    });
 
     // add key bindings to ace editor
     editor.commands.addCommand({

@@ -25,7 +25,7 @@ func init() {
 
 	// user routes
 	mux.AddSecureRoutes(USER, project, projectNew, account, accountSave)
-	mux.AddSecureRoutes(USER, projectRename, projectView, projectFiles, projectFile, projectFolderNew, projectFileNew, projectFileDel, projectFileMove)
+	mux.AddSecureRoutes(USER, projectRename, projectView, projectFiles, projectFile, projectFolderNew, projectFileNew, projectFileDel, projectFileMove, projectFileSave)
 
 	// admin routes
 	mux.AddSecureRoutes(ADMIN, adminHome)

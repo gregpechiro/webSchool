@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/cagnosolutions/web"
 )
@@ -93,7 +94,6 @@ var projectFiles = web.Route{"GET", "/project/:name/files", func(w http.Response
 		ajaxResponse(w, `{"id":"#","children":false}`)
 		return
 	}
-	// var nodes []Node
 	fileNodes := []FileNode{}
 	for _, file := range files {
 		if file.Name()[0] != '.' {
@@ -107,7 +107,6 @@ var projectFiles = web.Route{"GET", "/project/:name/files", func(w http.Response
 				fileNode.State = "closed"
 			} else {
 				fileNode.Type = setFileType(file.Name())
-				fmt.Println(fileNode.Type)
 			}
 			fileNodes = append(fileNodes, fileNode)
 		}
@@ -249,6 +248,29 @@ var projectFile = web.Route{"GET", "/project/:name/file", func(w http.ResponseWr
 		return
 	}
 
-	ajaxResponse(w, fmt.Sprintf(`{"error":false,"output":"%s"}`, encodeFile(file)))
+	ajaxResponse(w, fmt.Sprintf(`{"error":false,"output":"%s","fileType":"%s"}`, encodeFile(file), setFileType(path)))
+	return
+}}
+
+var projectFileSave = web.Route{"POST", "/project/:name/file/save", func(w http.ResponseWriter, r *http.Request) {
+	id := web.GetId(r)
+	var user User
+	if !db.Get("user", id, &user) {
+		web.Logout(w)
+		web.SetErrorRedirect(w, r, "/login", "Error finding user")
+	}
+
+	p, _ := url.QueryUnescape(r.FormValue("path"))
+	path := "projects/" + id + "/" + r.FormValue(":name") + p
+
+	data := r.FormValue("data")
+
+	if err := ioutil.WriteFile(path, []byte(data), 0666); err != nil {
+		log.Printf("projectRoutes.go >> projectFileSave >> ioutil.WriteFile() >> %v\n\n", err)
+		ajaxResponse(w, `{"error":true,"output":"Error saving `+filepath.Base(path)+`"}`)
+		return
+	}
+
+	ajaxResponse(w, `{"error":false,"output":"Successfully saved `+filepath.Base(path)+`"}`)
 	return
 }}

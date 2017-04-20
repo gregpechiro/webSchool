@@ -54,7 +54,12 @@
         <div class="left side" style="border:1px solid black;">
             <div class="away" style="height:30px; background-color: grey; width:100%; cursor:pointer;">
                 <div class="content">
-                    {{ .project }}
+                    <div class="pull-right">
+                        <i class="fa fa-arrow-left"></i>
+                    </div>
+                    <div class="pull-left">
+                        {{ .project }}
+                    </div>
                 </div>
                 <div class="alt hide">
                     <i class="fa fa-bars"></i>
@@ -66,8 +71,14 @@
         <div class="right side"  style="border:1px solid black;">
             <div class="away" style="height:30px; background-color: grey; width:100%; cursor:pointer;">
                 <div class="content">
-                    Settings
+                    <div class="pull-left">
+                        <i class="fa fa-arrow-right"></i>
+                    </div>
+                    <div class="pull-right">
+                        Settings
+                    </div>
                 </div>
+
                 <div class="alt hide">
                     <i class="fa fa-cog"></i>
                 </div>
@@ -169,9 +180,10 @@
             var project = '{{ .project }}';
         </script>
         <script src="/static/js/projectView/util.js" charset="utf-8"></script>
+        <script src="/static/js/projectView/memFile.js" charset="utf-8"></script>
         <script src="/static/js/projectView/main.js" charset="utf-8"></script>
         <script src="/static/js/projectView/jstree.js" charset="utf-8"></script>
-        <script src="/static/js/projectView/ace.js" charset="utf-8"></script>
+        <script src="/static/js/projectView/editor.js" charset="utf-8"></script>
         <script src="/static/js/projectView/settings.js" charset="utf-8"></script>
     </body>
 </html>

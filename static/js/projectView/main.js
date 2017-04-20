@@ -1,3 +1,33 @@
+var fileType;
+var current;
+var settings;
+var editor;
+var tree;
+var memFiles = {};
+
+$(document).ready(function() {
+    settings = getSettings();
+    editor = ace.edit("editor");
+
+    function onKeyDown(e) {
+        // ctrl+r remove default
+        if (e.ctrlKey) { // ctrl
+            if (e.keyCode == 83) { // +s
+                e.preventDefault();
+                if (e.shiftKey) {
+                    saveAll();
+                    return;
+                }
+                save(current);
+                return
+            }
+        }
+    }
+
+    // register the handler
+    document.addEventListener('keydown', onKeyDown, false);
+});
+
 $('html, body').height(window.innerHeight - 52);
 
 $('.away').click(function() {
@@ -13,15 +43,21 @@ $('.away').click(function() {
     parent.width('15%');
 });
 
-var fileType;
-var path;
-
-var settings = getSettings();
-
-var editor = ace.edit("editor");
-var t;
 
 function getFile(id) {
+    if (id == current) {
+        return;
+    }
+    current = id;
+
+    // check cache for file before requesting from server
+    var memFile = memFiles[id];
+    if (memFile != null && memFile.id != '') {
+        editor.setSession(memFile.session)
+        return;
+    }
+
+
     $.ajax({
         url: '/project/' + project + '/file?path=' + id,
         method: 'GET',
@@ -31,11 +67,17 @@ function getFile(id) {
                 alert('error');
                 return
             }
-            // replace editor with formated code
+            // parse returned file
             var file = atob(resp.output);
-            f = resp.output
-            editor.setValue(file, 1);
-            editor.session.setMode("ace/mode/" + fileType);
+
+            // create and set new chached file
+            memFile = new MemFile(id);
+            memFile.session = ace.createEditSession(file, "ace/mode/" + resp.fileType);
+            memFiles[id] = memFile;
+
+            // replace editor with formated code
+            editor.setSession(memFile.session);
+
             return
         },
         // display server error
@@ -46,4 +88,41 @@ function getFile(id) {
             return
         }
     });
+}
+
+function save(id) {
+    if (id != '') {
+        var memFile = memFiles[current];
+        if (memFile != null) {
+            if (memFile.unsaved) {
+                memFile.save();
+                return;
+            }
+        }
+        $.Notification.autoHideNotify('error', 'top center', 'No changes detected');
+    }
+}
+
+function saveAll() {
+    for (var key in memFiles) {
+        if (!memFiles.hasOwnProperty(key)) {
+            continue;
+        }
+        var memFile = memFiles[key];
+        if (memFile != null) {
+            if (memFile.unsaved) {
+                memFile.save();
+            }
+        }
+    }
+}
+
+function isSaved(id) {
+    var memFile = memFiles[id];
+    if (memFile != null) {
+        if (memFile.unsaved) {
+            return false;
+        }
+    }
+    return true;
 }

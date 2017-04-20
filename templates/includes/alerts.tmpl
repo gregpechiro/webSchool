@@ -4,19 +4,19 @@
 
 {{ if .alert }}
     <script type="text/javascript">
-        $.Notification.autoHideNotify('info', 'top right', '{{ .alert }}');
+        $.Notification.autoHideNotify('info', 'top center', '{{ .alert }}');
         console.log('alert');
     </script>
 {{ else if .alertError }}
     <script type="text/javascript">
-        $.Notification.autoHideNotify('error', 'top right', '{{ .alertError }}');
+        $.Notification.autoHideNotify('error', 'top center', '{{ .alertError }}');
     </script>
 {{ else if .alertSuccess }}
     <script type="text/javascript">
-        $.Notification.autoHideNotify('success', 'top right', '{{ .alertSuccess }}');
+        $.Notification.autoHideNotify('success', 'top center', '{{ .alertSuccess }}');
     </script>
 {{ else if .alertWarning }}
     <script type="text/javascript">
-        $.Notification.autoHideNotify('warning', 'top right', '{{ .alertWarning }}');
+        $.Notification.autoHideNotify('warning', 'top center', '{{ .alertWarning }}');
     </script>
 {{ end }}

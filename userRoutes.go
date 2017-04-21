@@ -10,6 +10,10 @@ import (
 	"github.com/cagnosolutions/web"
 )
 
+var temp = web.Route{"GET", "/temp", func(w http.ResponseWriter, r *http.Request) {
+	tmpl.Render(w, r, "temp.tmpl", nil)
+}}
+
 /* --- All Project management --- */
 
 var project = web.Route{"GET", "/project", func(w http.ResponseWriter, r *http.Request) {

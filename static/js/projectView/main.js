@@ -21,42 +21,54 @@ $(document).ready(function() {
                 save(current);
                 return
             }
+
+            if (e.altKey) { // + alt
+                e.preventDefault();
+                if (e.keyCode == 78) { // + n
+                    if (e.shiftKey) { // + shift
+                        newFolder(current);
+                        return;
+                    }
+                    newFile(current);
+                    return;
+                }
+            }
         }
     }
-
     // register the handler
     document.addEventListener('keydown', onKeyDown, false);
+
+    $('button#save').click(function() {
+        save(current);
+    });
+
+    $('button#saveAll').click(function() {
+        saveAll();
+    });
+
+    $('a#newFile').click(function() {
+        newFile(current);
+    });
+
+    $('a#newFolder').click(function() {
+        newFolder(current);
+    });
+
+    $(function () {
+        $('[data-toggle="popover"]').popover();
+    });
+
 });
 
 $('html, body').height(window.innerHeight - 52);
 
-$('.away').click(function() {
-    parent = $(this).closest('.side');
-    if (parent.width() > 35) {
-        parent.find('.content').addClass('hide');
-        parent.find('.alt').removeClass('hide');
-        parent.width(35);
-        return
-    }
-    parent.find('.alt').addClass('hide');
-    parent.find('.content').removeClass('hide');
-    parent.width('15%');
-});
-
-
 function getFile(id) {
-    if (id == current) {
-        return;
-    }
-    current = id;
-
     // check cache for file before requesting from server
     var memFile = memFiles[id];
     if (memFile != null && memFile.id != '') {
         editor.setSession(memFile.session)
         return;
     }
-
 
     $.ajax({
         url: '/project/' + project + '/file?path=' + id,
@@ -92,7 +104,7 @@ function getFile(id) {
 
 function save(id) {
     if (id != '') {
-        var memFile = memFiles[current];
+        var memFile = memFiles[id];
         if (memFile != null) {
             if (memFile.unsaved) {
                 memFile.save();
@@ -125,4 +137,52 @@ function isSaved(id) {
         }
     }
     return true;
+}
+
+function newFile(id) {
+    if (id != undefined && id != '') {
+        var n = tree.get_node(id);
+        while (n.type !== 'dir' && n.id !== '#') {
+            n = tree.get_node(n.parent);
+        }
+        $('input#filePath').val(n.id);
+        var p = '';
+        if (n.id != '#') {
+            p = decodeURIComponent(n.id);
+            if (p[0] == '/') {
+                p = p.slice(1);
+            }
+            if (p[p.length - 1] != '/') {
+                p += '/';
+            }
+        }
+        $('label#filePath').text(p);
+    } else {
+        $('input#filePath').val('#');
+    }
+    $('div#newFileModal').modal('show');
+}
+
+function newFolder(id) {
+    if (id != undefined && id != '') {
+        var n = tree.get_node(id);
+        while (n.type !== 'dir' && n.id !== '#') {
+            n = tree.get_node(n.parent);
+        }
+        $('input#folderPath').val(n.id);
+        var p = '';
+        if (n.id != '#') {
+            p = decodeURIComponent(n.id);
+            if (p[0] == '/') {
+                p = p.slice(1);
+            }
+            if (p[p.length - 1] != '/') {
+                p += '/';
+            }
+        }
+        $('label#folderPath').text(p);
+    } else {
+        $('input#folderPath').val('#');
+    }
+    $('div#newFolderModal').modal('show');
 }

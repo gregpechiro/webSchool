@@ -4,45 +4,16 @@
         {{ template "head.tmpl" . }}
 
         <link href="//cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" rel="stylesheet" />
-
+        <link href="/static/css/toggle-menu.css" rel="stylesheet">
         <script src="/static/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 
         <style media="screen">
-            .away {
-                width:100%;
-                height:30px;
-                padding: 5px 10px;
-                color: white;
-                background-color: grey;
-                cursor:pointer;
-            }
-
             .navbar{
                 margin-bottom: 0;
             }
 
-            .left {
-                position: relative;
-                float: left;
-                width: 15%;
-                height: 100%;
-                overflow-x: auto;
-                overflow-y: auto;
-            }
-
-            .right {
-                position: relative;
-                float: right;
-                width: 15%;
-                height: 100%;
-                overflow-x: hidden;
-                overflow-y: auto;
-            }
-
-            .middle {
-                height: 100%;
-                position: relative;
-                overflow:hidden;
+            .vakata-context {
+                z-index: 4;
             }
         </style>
 
@@ -51,8 +22,9 @@
     <body>
 
         {{ template "secure-navbar.tmpl" . }}
-        <div class="left side" style="border:1px solid black;">
-            <div class="away" style="height:30px; background-color: grey; width:100%; cursor:pointer;">
+
+        <div class="menu-left menu-open side" style="border:1px solid black;">
+            <div class="away menu-title">
                 <div class="content">
                     <div class="pull-right">
                         <i class="fa fa-arrow-left"></i>
@@ -65,11 +37,65 @@
                     <i class="fa fa-bars"></i>
                 </div>
             </div>
-            <div class="content" id="filetree"></div>
+            <div class="content">
+                <div class="col-lg-4 menu-item">
+                    <button id="save" class="btn btn-default no-round btn-block"
+                        data-toggle="popover"
+                        data-container="body"
+                        data-placement="bottom"
+                        data-content="Ctrl+S"
+                        data-trigger="hover"
+                        data-delay="200">
+                        Save
+                    </button>
+                </div>
+                <div class="col-lg-4 menu-item">
+                    <button id="saveAll" class="btn btn-default no-round btn-block"
+                        data-toggle="popover"
+                        data-container="body"
+                        data-placement="bottom"
+                        data-content="Ctrl+Shift+S"
+                        data-trigger="hover"
+                        data-delay="200">
+                        Save All
+                    </button>
+                </div>
+                <div class="col-lg-4 menu-item">
+                    <div class="dropdown">
+                        <button id="new" class="btn btn-block btn-default no-round" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            New
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu no-round" aria-labelledby="new">
+                            <li><a href="#" id="newFile"
+                                data-toggle="popover"
+                                data-container="body"
+                                data-placement="left"
+                                data-content="Ctrl+Alt+N"
+                                data-trigger="hover"
+                                data-delay="200">
+                                File
+                            </a></li>
+                            <li><a href="#" id="newFolder"
+                                data-toggle="popover"
+                                data-container="body"
+                                data-placement="left"
+                                data-content="Ctrl+Alt+Shift+N"
+                                data-trigger="hover"
+                                data-delay="200">
+                                Folder
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="filetree">
+
+                </div>
+            </div>
         </div>
 
-        <div class="right side"  style="border:1px solid black;">
-            <div class="away" style="height:30px; background-color: grey; width:100%; cursor:pointer;">
+        <div class="menu-right menu-open side"  style="border:1px solid black;">
+            <div class="away menu-title">
                 <div class="content">
                     <div class="pull-left">
                         <i class="fa fa-arrow-right"></i>
@@ -110,6 +136,7 @@
             </div>
         </div>
         <div class="middle" style="border:1px solid black">
+            <div id="fileName" class="text-center menu-title"></div>
             <!-- editor -->
             <div id="editor" style="height:100%"></div>
             <!-- editor -->
@@ -127,18 +154,12 @@
                         <h4 class="modal-title" id="myModalLabel">New File</h4>
                     </div>
                     <div class="modal-body clearfix">
-                        <form class="form-horizontal" action="/project/{{ .project }}/addFile" method="post">
+                        <form action="/project/{{ .project }}/addFile" method="post">
                             <div class="form-group">
-                                <label class="control-label col-xs-2">Name</label>
-                                <div class="col-xs-10">
-                                    <input type="text" class="form-control" name="file">
-                                </div>
+                                <label id="filePath"></label>
+                                <input type="text" class="form-control" name="file">
                             </div>
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <button class="btn btn-primary btn-block">Add</button>
-                                </div>
-                            </div>
+                            <button class="btn btn-primary btn-block">Add</button>
                             <input id="filePath" type="hidden" name="path">
                             <input type="hidden" name="redirect" value="/project/{{ .project }}">
                         </form>
@@ -155,18 +176,12 @@
                         <h4 class="modal-title" id="myModalLabel">New Folder</h4>
                     </div>
                     <div class="modal-body clearfix">
-                        <form class="form-horizontal" action="/project/{{ .project }}/mkdir" method="post">
+                        <form action="/project/{{ .project }}/mkdir" method="post">
                             <div class="form-group">
-                                <label class="control-label col-xs-2">Name</label>
-                                <div class="col-xs-10">
-                                    <input type="text" class="form-control" name="folder">
-                                </div>
+                                <label id="folderPath"></label>
+                                <input type="text" class="form-control" name="folder">
                             </div>
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <button class="btn btn-primary btn-block">Add</button>
-                                </div>
-                            </div>
+                            <button class="btn btn-primary btn-block">Add</button>
                             <input id="folderPath" type="hidden" name="path">
                             <input type="hidden" name="redirect" value="/project/{{ .project }}">
                         </form>
@@ -179,6 +194,7 @@
         <script type="text/javascript">
             var project = '{{ .project }}';
         </script>
+        <script src="/static/js/projectView/toggle-menu.js" charset="utf-8"></script>
         <script src="/static/js/projectView/util.js" charset="utf-8"></script>
         <script src="/static/js/projectView/memFile.js" charset="utf-8"></script>
         <script src="/static/js/projectView/main.js" charset="utf-8"></script>

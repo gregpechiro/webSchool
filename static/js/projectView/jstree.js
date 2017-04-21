@@ -1,13 +1,29 @@
 $(document).ready(function() {
     $('#filetree').on('select_node.jstree', function(e, data) {
-
-        var evt = window.event || e;
+        /*console.log(e);
+        console.log(data);
+        e2 = e;
+        evt = window.event || e;
         var button = evt.which || evt.button;
+        // console.log(button);
         if ( button != 1 ) {
             return;
+        }*/
+
+        if (data.event != null) {
+            if (data.event.type == 'contextmenu') {
+                return
+            }
         }
 
         var n = data.node;
+
+        if (n.id == current && n.type != 'dir') {
+            return
+        }
+
+        current = n.id;
+
         if (n.type === 'dir') {
             if (tree.is_closed(n)) {
                 tree.open_node(n);
@@ -16,8 +32,9 @@ $(document).ready(function() {
             }
             return;
         }
-        /*fileType = n.type;
-        current = n.id;*/
+
+        $('div#fileName').text(n.text);
+
         getFile(n.id);
 
     }).on('move_node.jstree', function(e, data) {
@@ -34,7 +51,7 @@ $(document).ready(function() {
             "state", "types", "wholerow", "sort"
         ],
         "core" : {
-            "multiple": true,
+            "multiple": false,
             "animation" : 0,
             "check_callback" : function(operation, node, node_parent, node_position, more) {
                 if (operation === "move_node") {
@@ -94,6 +111,7 @@ $(document).ready(function() {
         },
 
         "contextmenu" : {
+            "show_at_node":false,
             items : {
                 "new" : {
                     "separator_before"  : false,
@@ -103,26 +121,30 @@ $(document).ready(function() {
                     "submenu" :{
                         "create_file" : {
                             "label" : "File",
+                            "icon": "fa fa-file-code-o",
                             action : function (obj) {
-                                var n = tree.get_node(obj.reference[0].id);
+                                /*var n = tree.get_node(obj.reference[0].id);
                                 while (n.type !== 'dir' && n.id !== '#') {
                                     n = tree.get_node(n.parent);
                                 }
                                 $('input#filePath').val(n.id);
-                                $('div#newFileModal').modal('show');
+                                $('div#newFileModal').modal('show');*/
+                                newFile(obj.reference[0].id);
                             }
                         },
                         "create_folder" : {
                             "seperator_before" : false,
                             "seperator_after" : false,
                             "label" : "Folder",
+                            "icon": "glyphicon glyphicon-folder-open",
                             action : function (obj) {
-                                var n = tree.get_node(obj.reference[0].id);
+                                /*var n = tree.get_node(obj.reference[0].id);
                                 while (n.type !== 'dir' && n.id !== '#') {
                                     n = tree.get_node(n.parent);
                                 }
                                 $('input#folderPath').val(n.id);
-                                $('div#newFolderModal').modal('show');
+                                $('div#newFolderModal').modal('show');*/
+                                newFolder(obj.reference[0].id);
                             }
                         }
                     }
@@ -191,4 +213,11 @@ $(document).ready(function() {
     });
 
     tree = $('#filetree').jstree();
+
+    $(document).on('context_hide.vakata', function() {
+        if (tree.get_selected()[0] != current) {
+            tree.deselect_all();
+            tree.select_node(current);
+        }
+    })
 });

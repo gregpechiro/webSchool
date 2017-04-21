@@ -1,1 +1,8 @@
+.no-round {
+    border-radius: 0;
+}
 
+.menu-item {
+    padding-right: 0;
+    padding-left: 0;
+}

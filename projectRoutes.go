@@ -129,7 +129,7 @@ var projectFolderNew = web.Route{"POST", "/project/:name/mkdir", func(w http.Res
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
 	if r.FormValue(":name") == "" {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error deleting file/folder")
+		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
 		return
 	}
 	if r.FormValue("folder") == "" {
@@ -159,11 +159,11 @@ var projectFileNew = web.Route{"POST", "/project/:name/addFile", func(w http.Res
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
 	if r.FormValue(":name") == "" {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error deleting file/folder")
+		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating file file")
 		return
 	}
 	if r.FormValue("file") == "" {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
+		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new file")
 		return
 	}
 	p, _ := url.QueryUnescape(r.FormValue("path"))

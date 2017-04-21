@@ -21,7 +21,7 @@ func init() {
 	mux = web.NewMux()
 
 	// unsecure routes
-	mux.AddRoutes(home, register, login, logout, loginPost, updateSession)
+	mux.AddRoutes(home, register, login, logout, loginPost, updateSession, temp)
 
 	// user routes
 	mux.AddSecureRoutes(USER, project, projectNew, account, accountSave)

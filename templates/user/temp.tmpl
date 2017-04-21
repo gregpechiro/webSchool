@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {{ template "head.tmpl" .  }}
+
+        <link href="//cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" rel="stylesheet" />
+        <link href="/static/css/toggle-menu.css" rel="stylesheet">
+        <script src="/static/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
+        <style media="screen">
+            .navbar{
+                margin-bottom: 0;
+            }
+
+            .vakata-context {
+                z-index: 4;
+            }
+        </style>
+
+        <title></title>
+    </head>
+    <body>
+        <div class="dropdown">
+            <button id="new" class="btn btn-default no-round" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                New
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                <li id="ex1"><a href="#">Example 1</a></li>
+                <li id="ex2"><a href="#">Example 2</a></li>
+                <li id="ex3"><a href="#">Example 3</a></li>
+                <li id="ex5"><a href="#">Example 4</a></li>
+            </ul>
+        </div>
+
+        {{ template "scripts.tmpl" . }}
+
+        <script type="text/javascript">
+            $(function () {
+                var showPopover = function () {
+                    $(this).popover('show');
+                }
+                , hidePopover = function () {
+                    $(this).popover('hide');
+                };
+                $('#ex1').popover({
+                    content: 'An Example1 popover',
+                    trigger: 'hover',
+                    placement:'right'
+                })
+                $('#ex2').popover({
+                    content: 'An Example2 popover',
+                    trigger: 'hover',
+                    placement:'right'
+                })
+
+                $('#ex3').popover({
+                    content: 'An Example3 popover',
+                    trigger: 'hover',
+                    placement:'right'
+                })
+
+            });
+        </script>
+    </body>
+</html>

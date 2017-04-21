@@ -42,3 +42,11 @@ function getLocal(key) {
     }
     return '';
 }
+
+function displayError(msg) {
+    $.Notification.autoHideNotify('error', 'top center', msg);
+}
+
+function displaySuccess(msg) {
+    $.Notification.autoHideNotify('success', 'top center', msg);
+}

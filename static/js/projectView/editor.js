@@ -27,7 +27,10 @@ $(document).ready(function() {
     }
 
     editor.on('change', function() {
-        memFiles[current].update();
+        var memFile = memFiles[current];
+        if (memFile != null && memFile.id != '') {
+            memFile.update();
+        }
     });
 
     // add key bindings to ace editor

@@ -13,6 +13,9 @@ MemFile.prototype = {
         this.unsaved = true;
         var node = tree.get_node(this.id);
         node.text = '* ' + node.text;
+        if (node.id == current) {
+            setEditorHeader(node.text);
+        }
         tree.redraw(node);
     },
     save: function() {
@@ -27,14 +30,17 @@ MemFile.prototype = {
             success: function(resp) {
                 // check for returned error
                 if (resp.error) {
-                    $.Notification.autoHideNotify('error', 'top center', resp.output);
+                    displayError(resp.output);
                     return
                 }
                 memFile.unsaved = false;
                 var node = tree.get_node(memFile.id);
                 node.text = node.text.replace('* ', '');
+                if (node.id == current) {
+                    setEditorHeader(node.text);
+                }
                 tree.redraw(node);
-                $.Notification.autoHideNotify('success', 'top center', resp.output);
+                displaySuccess(resp.output);
                 return
             },
             // display server error

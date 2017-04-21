@@ -33,7 +33,7 @@ $(document).ready(function() {
             return;
         }
 
-        $('div#fileName').text(n.text);
+        setEditorHeader(n.text);
 
         getFile(n.id);
 
@@ -41,9 +41,31 @@ $(document).ready(function() {
         var frm = data.node.id;
         var to  = ((data.parent == "#") ? '/' + data.node.text : data.parent + '/' + data.node.text);
         if (frm !== to) {
-            var form = $('<form method="post" class="hide" action="/project/' + project + '/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="mov"></form>')
-            $('body').append(form);
-            form.submit();
+            $.ajax({
+                url: '/project/' + project + '/file/move',
+                method: 'POST',
+                data: {
+                    'to': to,
+                    'from': frm,
+                    'type': 'mov'
+                },
+                success: function(resp) {
+                    if (resp.error) {
+                        displayError(resp.output);
+                    } else {
+                        displaySuccess(resp.output);
+                    }
+                    tree.refresh();
+                },
+                error: function(e, d) {
+                    console.log(e);
+                    console.log(d);
+                    displayError('Error contacting server');
+                }
+            });
+            // var form = $('<form method="post" class="hide" action="/project/' + project + '/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="mov"></form>')
+            // $('body').append(form);
+            // form.submit();
         }
     }).jstree({
         "plugins" : [
@@ -97,14 +119,18 @@ $(document).ready(function() {
                 "valid_children" : ["dir", "file", "html", "css", "javascript"]
             },
             "html" : {
-                "icon" : "fa fa-file-code-o",
+                "icon" : "devicons devicons-html5",
                 "valid_children" : []
             },
             "css" : {
-                "icon" : "fa fa-file-code-o",
+                "icon" : "devicons devicons-css3_full",
                 "valid_children" : []
             },
             "javascript" : {
+                "icon" : "devicons devicons-javascript_badge",
+                "valid_children" : []
+            },
+            "json" : {
                 "icon" : "fa fa-file-code-o",
                 "valid_children" : []
             }
@@ -123,12 +149,6 @@ $(document).ready(function() {
                             "label" : "File",
                             "icon": "fa fa-file-code-o",
                             action : function (obj) {
-                                /*var n = tree.get_node(obj.reference[0].id);
-                                while (n.type !== 'dir' && n.id !== '#') {
-                                    n = tree.get_node(n.parent);
-                                }
-                                $('input#filePath').val(n.id);
-                                $('div#newFileModal').modal('show');*/
                                 newFile(obj.reference[0].id);
                             }
                         },
@@ -138,12 +158,6 @@ $(document).ready(function() {
                             "label" : "Folder",
                             "icon": "glyphicon glyphicon-folder-open",
                             action : function (obj) {
-                                /*var n = tree.get_node(obj.reference[0].id);
-                                while (n.type !== 'dir' && n.id !== '#') {
-                                    n = tree.get_node(n.parent);
-                                }
-                                $('input#folderPath').val(n.id);
-                                $('div#newFolderModal').modal('show');*/
                                 newFolder(obj.reference[0].id);
                             }
                         }
@@ -156,7 +170,7 @@ $(document).ready(function() {
                     "action"            : function(obj) {
                         var n = tree.get_node(obj.reference[0].id);
                         if (!isSaved(n.id)) {
-                            $.Notification.autoHideNotify('error', 'top center', 'You have unsaved changes.<br>Please save before renaming.');
+                            displayError('You have unsaved changes.<br>Please save before renaming.')
                             return
                         }
                         var old_name = n.text;
@@ -167,9 +181,31 @@ $(document).ready(function() {
                             var frm = node.id;
                             var to  = ((node.parent == "#") ? '/' + node.text : node.parent + '/' + node.text);
                             if (frm !== to) {
-                                var form = $('<form method="post" class="hide" action="/project/' + project + '/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="renam"></form>')
-                                $('body').append(form);
-                                form.submit();
+                                $.ajax({
+                                    url: '/project/' + project + '/file/move',
+                                    method: 'POST',
+                                    data: {
+                                        'to': to,
+                                        'from': frm,
+                                        'type': 'renam'
+                                    },
+                                    success: function(resp) {
+                                        if (resp.error) {
+                                            displayError(resp.output);
+                                        } else {
+                                            displaySuccess(resp.output);
+                                        }
+                                        tree.refresh();
+                                    },
+                                    error: function(e, d) {
+                                        console.log(e);
+                                        console.log(d);
+                                        displayError('Error contacting server');
+                                    }
+                                });
+                                // var form = $('<form method="post" class="hide" action="/project/' + project + '/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="renam"></form>')
+                                // $('body').append(form);
+                                // form.submit();
                             }
                         });
                     }
@@ -191,11 +227,29 @@ $(document).ready(function() {
                             showCancelButton: true,
                             confirmButtonColor: 'red',
                             confirmButtonText: "Yes",
-                            closeOnConfirm: false
+                            closeOnConfirm: true
                         }, function(){
-                            var form = $('<form method="post" class="hide" action="/project/' + project + '/file/del"><input name="path" value="' + n.id + '"></form>')
-                            $('body').append(form);
-                            form.submit();
+                            $.ajax({
+                                url: '/project/' + project + '/file/del',
+                                method: 'POST',
+                                data: {path: n.id},
+                                success: function(resp) {
+                                    if (resp.error) {
+                                        displayError(resp.output);
+                                    } else {
+                                        displaySuccess(resp.output);
+                                    }
+                                    tree.refresh();
+                                },
+                                error: function(e, d) {
+                                    console.log(e);
+                                    console.log(d);
+                                    displayError('Error contacting server');
+                                }
+                            })
+                            // var form = $('<form method="post" class="hide" action="/project/' + project + '/file/del"><input name="path" value="' + n.id + '"></form>')
+                            // $('body').append(form);
+                            // form.submit();
                         });
                     }
                 },
@@ -213,6 +267,8 @@ $(document).ready(function() {
     });
 
     tree = $('#filetree').jstree();
+    // reset li height
+    tree._data.core.li_height = tree.get_container_ul().children("li").first().outerHeight();
 
     $(document).on('context_hide.vakata', function() {
         if (tree.get_selected()[0] != current) {

@@ -4,7 +4,6 @@ var settings;
 var editor;
 var tree;
 var memFiles = {};
-
 $(document).ready(function() {
     settings = getSettings();
     editor = ace.edit("editor");
@@ -56,6 +55,20 @@ $(document).ready(function() {
 
     $(function () {
         $('[data-toggle="popover"]').popover();
+    });
+
+    $('#newFileModal').on('hidden.bs.modal', function (e) {
+        $('form#newFileForm')[0].reset();
+    });
+
+    $('#newFolderModal').on('hidden.bs.modal', function (e) {
+        $('form#newFolderForm')[0].reset();
+    });
+
+    $('button#newFile').click(function() {
+        $.ajax({
+            
+        });
     });
 
 });
@@ -111,7 +124,7 @@ function save(id) {
                 return;
             }
         }
-        $.Notification.autoHideNotify('error', 'top center', 'No changes detected');
+        displayError('No changes detected')
     }
 }
 
@@ -185,4 +198,8 @@ function newFolder(id) {
         $('input#folderPath').val('#');
     }
     $('div#newFolderModal').modal('show');
+}
+
+function setEditorHeader(header) {
+    $('div#fileName').text(header);
 }

@@ -5,6 +5,7 @@
 
         <link href="//cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" rel="stylesheet" />
         <link href="/static/css/toggle-menu.css" rel="stylesheet">
+        <link href='//cdn.jsdelivr.net/devicons/1.8.0/css/devicons.min.css' rel='stylesheet'>
         <script src="/static/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
 
         <style media="screen">
@@ -154,15 +155,15 @@
                         <h4 class="modal-title" id="myModalLabel">New File</h4>
                     </div>
                     <div class="modal-body clearfix">
-                        <form action="/project/{{ .project }}/addFile" method="post">
+                        <form action="/project/{{ .project }}/addFile" id="newFileForm">
                             <div class="form-group">
                                 <label id="filePath"></label>
                                 <input type="text" class="form-control" name="file">
                             </div>
-                            <button class="btn btn-primary btn-block">Add</button>
                             <input id="filePath" type="hidden" name="path">
-                            <input type="hidden" name="redirect" value="/project/{{ .project }}">
+                            <!-- <input type="hidden" name="redirect" value="/project/{{ .project }}"> -->
                         </form>
+                        <button class="btn btn-primary btn-block" id="newFile">Add</button>
                     </div>
                 </div>
             </div>
@@ -176,15 +177,15 @@
                         <h4 class="modal-title" id="myModalLabel">New Folder</h4>
                     </div>
                     <div class="modal-body clearfix">
-                        <form action="/project/{{ .project }}/mkdir" method="post">
+                        <form id="newFolderForm">
                             <div class="form-group">
                                 <label id="folderPath"></label>
                                 <input type="text" class="form-control" name="folder">
                             </div>
-                            <button class="btn btn-primary btn-block">Add</button>
                             <input id="folderPath" type="hidden" name="path">
                             <input type="hidden" name="redirect" value="/project/{{ .project }}">
                         </form>
+                        <button class="btn btn-primary btn-block" id="newFolder">Add</button>
                     </div>
                 </div>
             </div>

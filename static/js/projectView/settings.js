@@ -9,13 +9,7 @@ $(document).ready(function() {
     } else if (settings.editor.keys === 'emacs'){
         $('#keybindings').val('emacs');
     }
-    if (settings.editor.load === 'load') {
-        $('#load')[0].checked = true;
-    }
-    if (settings.version !== '' && settings.version !== undefined) {
-        $('select#version').val(settings.version);
-    }
-
+    
     // update theme on change
     $('#theme').change(function() {
         var theme = $('#theme').val()

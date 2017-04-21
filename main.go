@@ -17,7 +17,7 @@ var db *adb.DB = adb.NewDB()
 func init() {
 	db.AddStore("user")
 
-	web.SESSDUR = 15 * time.Minute
+	web.SESSDUR = 45 * time.Minute
 	mux = web.NewMux()
 
 	// unsecure routes

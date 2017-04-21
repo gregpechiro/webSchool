@@ -129,12 +129,14 @@ var projectFolderNew = web.Route{"POST", "/project/:name/mkdir", func(w http.Res
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
 	if r.FormValue(":name") == "" {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
+		ajaxResponse(w, `{"error":true,"output":"Error creating new folder"}`)
 		return
 	}
 	if r.FormValue("folder") == "" {
 
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
+		ajaxResponse(w, `{"error":true,"output":"Error creating new folder"}`)
 		return
 	}
 	p, _ := url.QueryUnescape(r.FormValue("path"))
@@ -144,10 +146,12 @@ var projectFolderNew = web.Route{"POST", "/project/:name/mkdir", func(w http.Res
 	path := "projects/" + id + "/" + r.FormValue(":name") + "/" + p
 
 	if err := os.MkdirAll(path+"/"+r.FormValue("folder"), 0755); err != nil {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
+		ajaxResponse(w, `{"error":true,"output":"Error creating new folder"}`)
 		return
 	}
-	web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully created new folder")
+	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully created new folder")
+	ajaxResponse(w, `{"error":false,"output":"Successfully created new folder"}`)
 	return
 }}
 
@@ -159,11 +163,13 @@ var projectFileNew = web.Route{"POST", "/project/:name/addFile", func(w http.Res
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
 	if r.FormValue(":name") == "" {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating file file")
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating file file")
+		ajaxResponse(w, `{"error":true,"output":"Error creating new file"}`)
 		return
 	}
 	if r.FormValue("file") == "" {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new file")
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new file")
+		ajaxResponse(w, `{"error":true,"output":"Error creating new file"}`)
 		return
 	}
 	p, _ := url.QueryUnescape(r.FormValue("path"))
@@ -174,12 +180,14 @@ var projectFileNew = web.Route{"POST", "/project/:name/addFile", func(w http.Res
 
 	f, err := os.Create(path + "/" + r.FormValue("file"))
 	if err != nil {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new file")
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new file")
+		ajaxResponse(w, `{"error":true,"output":"Error creating new file"}`)
 		return
 	}
 	f.Close()
 
-	web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully created new folder")
+	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully created new file")
+	ajaxResponse(w, `{"error":false,"output":"Successfully created new file"}`)
 	return
 }}
 
@@ -191,7 +199,7 @@ var projectFileDel = web.Route{"POST", "/project/:name/file/del", func(w http.Re
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
 	if r.FormValue("path") == "" {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error deleting file/folder")
+		ajaxResponse(w, `{"error":true,"output":"Error deleting file/folder"}`)
 		return
 	}
 
@@ -199,10 +207,10 @@ var projectFileDel = web.Route{"POST", "/project/:name/file/del", func(w http.Re
 	path := "projects/" + id + "/" + r.FormValue(":name") + p
 
 	if err := os.RemoveAll(path); err != nil {
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error deleting file/folder")
+		ajaxResponse(w, `{"error":true,"output":"Error deleting file/folder"}`)
 		return
 	}
-	web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully deleted file/folder")
+	ajaxResponse(w, `{"error":false,"output":"Successfully deleted file/folder"}`)
 	return
 }}
 
@@ -219,16 +227,19 @@ var projectFileMove = web.Route{"POST", "/project/:name/file/move", func(w http.
 	to, _ := url.QueryUnescape(r.FormValue("to"))
 	if from == "" || to == "" {
 		log.Printf("projectRoutes.go >> projectFileMove >> FROM: %s, TO: %s\n\n", from, to)
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error "+r.FormValue("type")+"ing file/folder")
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error "+r.FormValue("type")+"ing file/folder")
+		ajaxResponse(w, `{"error":true,"output":"Error `+r.FormValue("type")+`ing file/folder}`)
 		return
 	}
 
 	if err := os.Rename(path+from, path+to); err != nil {
 		log.Printf("projectRoutes.go >> projectFileMove >> os.Rename() >> %v\n\n", err)
-		web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error "+r.FormValue("type")+"ing file")
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error "+r.FormValue("type")+"ing file/folder")
+		ajaxResponse(w, `{"error":true,"output":"Error `+r.FormValue("type")+`ing file/folder}`)
 		return
 	}
-	web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully "+r.FormValue("type")+"ed file")
+	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully "+r.FormValue("type")+"ed file/folder")
+	ajaxResponse(w, `{"error":false,"output":"Successfully `+r.FormValue("type")+`ed file/folder"}`)
 	return
 }}
 

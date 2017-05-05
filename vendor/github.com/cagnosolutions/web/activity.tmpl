@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <!--[if lt IE 9]>
+        <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="//cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css" >
+        <style media="screen">
+            tr#search input {
+                width: 100%;
+                padding: 3px;
+                box-sizing: border-box;
+            }
+
+            tr#search th {
+                padding-right: 8px;
+            }
+
+            .clickable {
+                cursor: pointer;
+            }
+        </style>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script type="text/javascript">
+            {{ .uaJs }}
+        </script>
+    </head>
+    <body>
+        <div class="container-fluid" style="margin-top:10px;">
+            <div class="row">
+                <div class="col-lg-12">
+                    <table id="activities" class="table table-bordered">
+                        <thead>
+                            <tr id="search">
+                                <th></th>
+                                <th>ipAddress</th>
+                                <th>userId</th>
+                                <th></th>
+                                <th>location</th>
+                                <th>lastAction</th>
+                                <th>browser</th>
+                                <th>engine</th>
+                                <th>os</th>
+                                <th>cpu</th>
+                            </tr>
+                            <tr>
+                                <th>Time Stamp</th>
+                                <th>IP address</th>
+                                <th>User Id</th>
+                                <th>User Role</th>
+                                <th>Location</th>
+                                <th>Last Action</th>
+                                <th>Browser</th>
+                                <th>Engine</th>
+                                <th>OS</th>
+                                <th>CPU</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{ range $i, $activity := .activities }}
+                                {{ if ne $activity.UserAgent "Auvik HTTP Monitor" }}
+                                    <tr>
+                                        <td>{{ $activity.Time }}</td>
+                                        <td>{{ $activity.Ip }}</td>
+                                        <td>{{ $activity.Session.GetId }}</td>
+                                        <td>{{ $activity.Session.GetRole }}</td>
+                                        <td id="loc{{ $i }}"></td>
+                                        <td>
+                                            {{ $activity.Actions.Recent.Method }} {{ $activity.Actions.Recent.Path }} {{ $activity.Actions.Recent.Time }}
+                                            <button data-actions="{{ $activity.Actions.ToJson }}" class="more btn btn-primary btn-xs pull-right">More</button>
+                                        </td>
+                                        <td id="browser{{ $i }}"></td>
+                                        <td id="engine{{ $i }}"></td>
+                                        <td id="os{{ $i }}"></td>
+                                        <td id="cpu{{ $i }}"></td>
+                                        <script type="text/javascript">
+                                            if ('{{ $activity.UserAgent }}' !== 'Auvik HTTP Monitor') {
+                                                var p = new UAParser('{{ $activity.UserAgent }}');
+                                                $('td#browser{{ $i }}').text(p.getBrowser().name + ' ' + p.getBrowser().version);
+                                                $('td#engine{{ $i }}').text(p.getEngine().name + ' ' + p.getEngine().version);
+                                                $('td#os{{ $i }}').text(p.getOS().name + ' ' + p.getOS().version);
+                                                $('td#cpu{{ $i }}').text(p.getCPU().architecture);
+                                            }
+
+                                            $.getJSON('http://ipinfo.io/{{ $activity.Ip }}', function(data){
+                                                $('td#loc{{ $i }}').text(((data.city !== '' && data.city !== undefined ) ? data.city : '') + ((data.region !== '' && data.region !== undefined ) ? (' ' + data.region) : ''));
+                                            })
+                                        </script>
+                                    </tr>
+                                {{ end }}
+                            {{ end }}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="actionModal" tabindex="-1" role="dialog" aria-labelledby="actionModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Actions</h4>
+                    </div>
+                    <div class="modal-body" id="actionModalBody">
+                        <table class="table">
+                            <tbody id="actionModalTable">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js" charset="utf-8"></script>
+        <script src="//cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            var table = $('#activities').DataTable({
+                "lengthMenu":[10,15,20],
+                "order": [[ 0, "desc" ]],
+                "columnDefs": [
+                    { "orderable": false,        "targets": [2] },
+                    { "name"     : "ipAddress",  "targets": 1 },
+                    { "name"     : "userId",     "targets": 2 },
+                    { "name"     : "location",   "targets": 4 },
+                    { "name"     : "lastAction", "targets": 5 },
+                    { "name"     : "browser",    "targets": 6 },
+                    { "name"     : "engine",     "targets": 7 },
+                    { "name"     : "os",         "targets": 8 },
+                    { "name"     : "cpu",        "targets": 9 }
+                ]
+            });
+
+            $('button.more').click(function() {
+                actions = JSON.parse($(this).attr('data-actions'));
+                var ac = '';
+                for (var i = 0; i < actions.length; i++) {
+                    ac += '<tr>' +
+                            '<td>' + actions[i].method + '</td>' +
+                            '<td>' + actions[i].path + '</td>' +
+                            '<td>' + actions[i].time + '</td>' +
+                        '</tr>'
+                }
+                $('#actionModalTable').html(ac);
+                $('#actionModal').modal('show');
+            });
+
+            $(document).on('click', 'tr.clickable', function() {
+                if (this.getAttribute('data-target') === '_blank') {
+                    window.open(this.getAttribute('data-url'));
+                    return
+                }
+                window.location.href = this.getAttribute('data-url');
+            });
+
+            $('#filter').on( 'keyup', function () {
+                if (table !== undefined && !$.isEmptyObject(table)) {
+                    table.search( this.value ).draw();
+                }
+            });
+
+            $('tr#search th').each(function () {
+                var title = $(this).text();
+                if (title != '') {
+                    $(this).html('<input id="columnSearch" data-column="' + title + '" type="text"/>');
+                }
+            });
+
+            $('input#columnSearch').keyup(function() {
+                var name = $(this).attr('data-column');
+                var column = table.column(name + ':name');
+                if (column.search() !== this.value ) {
+                    column.search(this.value).draw();
+                }
+            });
+
+        </script>
+
+    </body>
+</html>

@@ -7,6 +7,9 @@
         <link href="/static/css/toggle-menu.css" rel="stylesheet">
         <link href='//cdn.jsdelivr.net/devicons/1.8.0/css/devicons.min.css' rel='stylesheet'>
         <script src="/static/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+        <script src="/static/js/src-min-noconflict/ext-language_tools.js"></script>
+
+        <style>input.uploader{position:absolute;left:-9999px;}label.uploader{cursor:pointer;}</style>
 
         <style media="screen">
             .navbar{
@@ -18,11 +21,11 @@
             }
         </style>
 
-        <title>Account</title>
+        <title>{{ .project }}</title>
     </head>
     <body>
 
-        {{ template "secure-navbar.tmpl" . }}
+        {{ template "navbar-secure.tmpl" . }}
 
         <div class="menu-left menu-open side" style="border:1px solid black;">
             <div class="away menu-title">
@@ -38,64 +41,79 @@
                     <i class="fa fa-bars"></i>
                 </div>
             </div>
-            <div class="content">
-                <div class="col-lg-4 menu-item">
-                    <button id="save" class="btn btn-default no-round btn-block"
-                        data-toggle="popover"
-                        data-container="body"
-                        data-placement="bottom"
-                        data-content="Ctrl+S"
-                        data-trigger="hover"
-                        data-delay="200">
-                        Save
-                    </button>
-                </div>
-                <div class="col-lg-4 menu-item">
-                    <button id="saveAll" class="btn btn-default no-round btn-block"
-                        data-toggle="popover"
-                        data-container="body"
-                        data-placement="bottom"
-                        data-content="Ctrl+Shift+S"
-                        data-trigger="hover"
-                        data-delay="200">
-                        Save All
-                    </button>
-                </div>
-                <div class="col-lg-4 menu-item">
-                    <div class="dropdown">
-                        <button id="new" class="btn btn-block btn-default no-round" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            New
-                            <span class="caret"></span>
+
+            <div class="content" style="height:90%">
+                <div class="row no-marg">
+                    <div class="col-lg-4 no-pad">
+                        <button id="save" class="btn btn-default no-round btn-block"
+                            data-toggle="popover"
+                            data-container="body"
+                            data-placement="bottom"
+                            data-content="Ctrl+S"
+                            data-trigger="hover"
+                            data-delay="200">
+                            Save
                         </button>
-                        <ul class="dropdown-menu no-round" aria-labelledby="new">
-                            <li><a href="#" id="newFile"
-                                data-toggle="popover"
-                                data-container="body"
-                                data-placement="left"
-                                data-content="Ctrl+Alt+N"
-                                data-trigger="hover"
-                                data-delay="200">
-                                File
-                            </a></li>
-                            <li><a href="#" id="newFolder"
-                                data-toggle="popover"
-                                data-container="body"
-                                data-placement="left"
-                                data-content="Ctrl+Alt+Shift+N"
-                                data-trigger="hover"
-                                data-delay="200">
-                                Folder
-                            </a></li>
-                        </ul>
+                    </div>
+                    <div class="col-lg-4 no-pad">
+                        <button id="saveAll" class="btn btn-default no-round btn-block"
+                            data-toggle="popover"
+                            data-container="body"
+                            data-placement="bottom"
+                            data-content="Ctrl+Shift+S"
+                            data-trigger="hover"
+                            data-delay="200">
+                            Save All
+                        </button>
+                    </div>
+                    <div class="col-lg-4 no-pad">
+                        <div class="dropdown">
+                            <button id="new" class="btn btn-block btn-default no-round" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                New
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu no-round" aria-labelledby="new">
+                                <li><a href="#" id="newFile"
+                                    data-toggle="popover"
+                                    data-container="body"
+                                    data-placement="left"
+                                    data-content="Ctrl+Alt+N"
+                                    data-trigger="hover"
+                                    data-delay="200">
+                                    File
+                                </a></li>
+                                <li><a href="#" id="newFolder"
+                                    data-toggle="popover"
+                                    data-container="body"
+                                    data-placement="left"
+                                    data-content="Ctrl+Alt+Shift+N"
+                                    data-trigger="hover"
+                                    data-delay="200">
+                                    Folder
+                                </a></li>
+                                <li><a href="#" id="newImage"
+                                    data-toggle="popover"
+                                    data-container="body"
+                                    data-placement="left"
+                                    data-content="Ctrl+I"
+                                    data-trigger="hover"
+                                    data-delay="200">
+                                    Image
+                                </a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-                <div id="filetree">
+                    <div class="scroll">
+                        <div id="filetree">
 
-                </div>
+                        </div>
+                    </div>
+
             </div>
         </div>
 
-        <div class="menu-right menu-open side"  style="border:1px solid black;">
+        <div class="menu-right menu-close side"  style="border:1px solid black;">
             <div class="away menu-title">
                 <div class="content">
                     <div class="pull-left">
@@ -110,7 +128,7 @@
                     <i class="fa fa-cog"></i>
                 </div>
             </div>
-            <div class="content" style="padding:15px;">
+            <div class="content scroll" style="padding:15px;">
                 <div class="form-group">
                     <label>Theme</label>
                     <select class="form-control" id="theme">
@@ -155,13 +173,12 @@
                         <h4 class="modal-title" id="myModalLabel">New File</h4>
                     </div>
                     <div class="modal-body clearfix">
-                        <form action="/project/{{ .project }}/addFile" id="newFileForm">
+                        <form id="newFileForm">
                             <div class="form-group">
                                 <label id="filePath"></label>
                                 <input type="text" class="form-control" name="file">
                             </div>
                             <input id="filePath" type="hidden" name="path">
-                            <!-- <input type="hidden" name="redirect" value="/project/{{ .project }}"> -->
                         </form>
                         <button class="btn btn-primary btn-block" id="newFile">Add</button>
                     </div>
@@ -183,7 +200,6 @@
                                 <input type="text" class="form-control" name="folder">
                             </div>
                             <input id="folderPath" type="hidden" name="path">
-                            <input type="hidden" name="redirect" value="/project/{{ .project }}">
                         </form>
                         <button class="btn btn-primary btn-block" id="newFolder">Add</button>
                     </div>
@@ -191,9 +207,47 @@
             </div>
         </div>
 
+        <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Upload Image</h4>
+                    </div>
+                    <div class="modal-body clearfix">
+
+                        <form id="uploader" method="post" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label id="uploadPath"></label>
+                                <label class="btn btn-default btn-block uploader" for="file">Select Image</label>
+                                <input class="uploader" id="file" type="file" name="file" required>
+                            </div>
+                            <input id="uploadPath" type="hidden" name="path">
+                            <button id="upload" type="button" class="btn btn-block btn-primary" disabled>Upload</button>
+                       </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script src="//cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+        <script src="/static/js/upload.js" charset="utf-8"></script>
         <script type="text/javascript">
             var project = '{{ .project }}';
+
+            var host = 'http://{{ .user.Username }}.school.xiphoid24.com';
+            // var host = 'http://{{ .user.Username }}.temp.test.localhost:8080';
+            uploader.displayError = function(msg) {
+                $.Notification.autoHideNotify('error', 'top right', msg);
+            }
+            uploader.defaultText = 'Select Image';
+            uploader.maxSize = 1 * uploader.MB;
+            uploader.maxSizeMsg = 'File too large. Max size 1MB'
+
+            $('#uploadModal').on('hidden.bs.modal', function () {
+                uploader.reset($('form#uploader'));
+            });
+
         </script>
         <script src="/static/js/projectView/toggle-menu.js" charset="utf-8"></script>
         <script src="/static/js/projectView/util.js" charset="utf-8"></script>

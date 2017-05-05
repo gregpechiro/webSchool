@@ -18,7 +18,7 @@
     </head>
     <body>
 
-        {{ template "secure-navbar.tmpl" . }}
+        {{ template "navbar-secure.tmpl" . }}
 
         <div class="container">
             <div class="row">
@@ -36,12 +36,19 @@
                             </form>
                         </div>
                         <div class="panel-body">
+                            {{ $user := .user }}
                             {{ range $project := .projects}}
                                 <div class="col-lg-2 col-xs-2">
-                                    <div class="well well-sm clickable" data-url="/project/{{ $project.Name }}">
+                                    <div class="well well-sm clickable project no-round-bottom" data-url="/project/{{ $project.Name }}">
                                         {{ $project.Name }}<br>
                                         Project Size: {{ $project.Size }}<br>
                                         Number of Files: {{ $project.NumFiles }}
+                                    </div>
+                                    <div class="col-lg-6 no-pad">
+                                        <button class="btn btn-danger btn-xs btn-block btn-bottom-left confirm-action" data-message="Are you sure you would like to delete this project?" data-color="#ff0000" data-url="/project/{{ $project.Name }}/del" data-type="warning">Delete</button>
+                                    </div>
+                                    <div class="col-lg-6 no-pad">
+                                        <a href="http://{{ $user.Username }}.school.xiphoid24.com/{{ $project.Name }}" target="_blank" class="btn btn-success btn-xs btn-block btn-bottom-right">View</a>
                                     </div>
                                 </div>
                             {{ end }}
@@ -51,14 +58,23 @@
             </div>
         </div>
 
+         <form id="delete-form" class="hide" action="" method="post"></form>
+
         {{ template "scripts.tmpl" . }}
 
         {{ template "session.tmpl" . }}
 
+        <script src="/static/js/confirm.js" charset="utf-8"></script>
+
         <script type="text/javascript">
             $('div.clickable').click(function() {
                 window.location.href = this.getAttribute('data-url')
-            })
+            });
+
+            confirm.yes = function(btn) {
+                $('form#delete-form').attr('action', btn.attr('data-url'));
+                $('form#delete-form').submit();
+            }
         </script>
 
     </body>

@@ -1,14 +1,8 @@
 $(document).ready(function() {
     $('#filetree').on('select_node.jstree', function(e, data) {
-        /*console.log(e);
-        console.log(data);
-        e2 = e;
+
         evt = window.event || e;
         var button = evt.which || evt.button;
-        // console.log(button);
-        if ( button != 1 ) {
-            return;
-        }*/
 
         if (data.event != null) {
             if (data.event.type == 'contextmenu') {
@@ -25,11 +19,22 @@ $(document).ready(function() {
         current = n.id;
 
         if (n.type === 'dir') {
+            if ( button != 1 ) {
+                return;
+            }
             if (tree.is_closed(n)) {
                 tree.open_node(n);
             } else {
                 tree.close_node(n);
             }
+            return;
+        }
+
+        if (n.type === 'image') {
+            if ( button != 1 ) {
+                return;
+            }
+            window.open( host + '/' + project + decodeURIComponent(n.id));
             return;
         }
 
@@ -63,9 +68,6 @@ $(document).ready(function() {
                     displayError('Error contacting server');
                 }
             });
-            // var form = $('<form method="post" class="hide" action="/project/' + project + '/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="mov"></form>')
-            // $('body').append(form);
-            // form.submit();
         }
     }).jstree({
         "plugins" : [
@@ -133,6 +135,10 @@ $(document).ready(function() {
             "json" : {
                 "icon" : "fa fa-file-code-o",
                 "valid_children" : []
+            },
+            "image": {
+                "icon" : "fa fa-file-image-o",
+                "valid_children" : []
             }
         },
 
@@ -159,6 +165,13 @@ $(document).ready(function() {
                             "icon": "glyphicon glyphicon-folder-open",
                             action : function (obj) {
                                 newFolder(obj.reference[0].id);
+                            }
+                        },
+                        "create_image" : {
+                            "label" : "Image",
+                            "icon": "fa fa-file-code-o",
+                            action : function (obj) {
+                                newImage(obj.reference[0].id);
                             }
                         }
                     }
@@ -203,9 +216,6 @@ $(document).ready(function() {
                                         displayError('Error contacting server');
                                     }
                                 });
-                                // var form = $('<form method="post" class="hide" action="/project/' + project + '/file/move"><input name="to" value="' + to + '"><input name="from" value="' + frm + '"><input name="type" value="renam"></form>')
-                                // $('body').append(form);
-                                // form.submit();
                             }
                         });
                     }
@@ -247,9 +257,6 @@ $(document).ready(function() {
                                     displayError('Error contacting server');
                                 }
                             })
-                            // var form = $('<form method="post" class="hide" action="/project/' + project + '/file/del"><input name="path" value="' + n.id + '"></form>')
-                            // $('body').append(form);
-                            // form.submit();
                         });
                     }
                 },

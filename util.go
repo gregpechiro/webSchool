@@ -25,6 +25,10 @@ func setFileType(name string) string {
 		return "css"
 	case ".json":
 		return "json"
+	case ".jpg":
+		return "image"
+	case ".png":
+		return "image"
 	}
 	return "default"
 }
@@ -112,6 +116,14 @@ func pretty(s string) string {
 		}
 	}
 	return s
+}
+
+func PrettyDateTime(ts int64) string {
+	if ts == 0 {
+		return ""
+	}
+	t := time.Unix(ts, 0)
+	return t.Format("1/2/2006 3:04 PM")
 }
 
 var themes = []string{

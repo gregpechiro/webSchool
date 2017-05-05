@@ -10,6 +10,14 @@ $(document).ready(function() {
     editor.setOption("scrollPastEnd", 1);
     editor.renderer.setScrollMargin(15);
     editor.$blockScrolling = Infinity;
+
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: true
+    });
+
+
     $('textarea.ace_text-input').focus();
 
     // init settings from local storage

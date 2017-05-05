@@ -14,18 +14,23 @@
     position: relative;
     float: left;
     height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
+/*    overflow-x: hidden;
+    overflow-y: auto;*/
 }
 
 .menu-right {
     position: relative;
     float: right;
     height: 100%;
+/*    overflow-x: hidden;
+    overflow-y: auto;*/
+}
+
+.scroll {
+    height: 80%;
     overflow-x: hidden;
     overflow-y: auto;
 }
-
 
 @media (min-width: 1200px) {
     .menu-open {

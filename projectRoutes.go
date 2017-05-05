@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -28,7 +29,7 @@ var projectView = web.Route{"GET", "/project/:name", func(w http.ResponseWriter,
 	return
 }}
 
-var projectRename = web.Route{"POST", "/project/:name", func(w http.ResponseWriter, r *http.Request) {
+var projectRename = web.Route{"POST", "/project/:name/rename", func(w http.ResponseWriter, r *http.Request) {
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
@@ -63,6 +64,7 @@ var projectRename = web.Route{"POST", "/project/:name", func(w http.ResponseWrit
 		web.SetErrorRedirect(w, r, "/project", "That project name is already taken")
 		return
 	}
+
 	if os.IsNotExist(err) {
 		web.SetErrorRedirect(w, r, "/project", "Error creating new project")
 		return
@@ -75,6 +77,31 @@ var projectRename = web.Route{"POST", "/project/:name", func(w http.ResponseWrit
 
 	web.SetSuccessRedirect(w, r, "/project", "Successfully renamed project")
 	return
+}}
+
+var projectDel = web.Route{"POST", "/project/:name/del", func(w http.ResponseWriter, r *http.Request) {
+	id := web.GetId(r)
+	var user User
+	if !db.Get("user", id, &user) {
+		web.Logout(w)
+		web.SetErrorRedirect(w, r, "/login", "Error finding user")
+	}
+	name := r.FormValue(":name")
+	if name == "" {
+		web.SetErrorRedirect(w, r, "/project", "Project name cannot be empty")
+		return
+	}
+
+	path := "projects/" + id + "/" + r.FormValue(":name")
+
+	if err := os.RemoveAll(path); err != nil {
+		web.SetErrorRedirect(w, r, "/project", "Error deleting project")
+		return
+	}
+
+	web.SetSuccessRedirect(w, r, "/project", "Successfully deleted project")
+	return
+
 }}
 
 var projectFiles = web.Route{"GET", "/project/:name/files", func(w http.ResponseWriter, r *http.Request) {
@@ -188,6 +215,50 @@ var projectFileNew = web.Route{"POST", "/project/:name/addFile", func(w http.Res
 
 	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully created new file")
 	ajaxResponse(w, `{"error":false,"output":"Successfully created new file"}`)
+	return
+}}
+
+var projectUploadImage = web.Route{"POST", "/project/:name/upload", func(w http.ResponseWriter, r *http.Request) {
+	id := web.GetId(r)
+	var user User
+	if !db.Get("user", id, &user) {
+		web.Logout(w)
+		web.SetErrorRedirect(w, r, "/login", "Error finding user")
+	}
+
+	p, _ := url.QueryUnescape(r.FormValue("path"))
+	if p == "#" {
+		p = ""
+	}
+	path := "projects/" + id + "/" + r.FormValue(":name") + p
+
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		log.Printf("projectRoutes.go >> projectUploadImage >> r.FormFile() >> %v\n", err)
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error uploading image")
+		ajaxResponse(w, `{"error":true,"output":"Error uploading image"}`)
+		return
+	}
+
+	defer file.Close()
+	f, err := os.OpenFile(path+"/"+handler.Filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		log.Printf("projectRoutes.go >> projectUploadImage >> os.OpenFile() >> %v\n", err)
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error uploading image")
+		ajaxResponse(w, `{"error":true,"output":"Error uploading image"}`)
+		return
+	}
+
+	defer f.Close()
+	if _, err := io.Copy(f, file); err != nil {
+		log.Printf("projectRoutes.go >> projectUploadImage >> io.Copy() >> %v\n", err)
+		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error uploading image")
+		ajaxResponse(w, `{"error":true,"output":"Error uploading image"}`)
+		return
+	}
+
+	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfuly uploaded image")
+	ajaxResponse(w, `{"error":false,"output":"Successfully uploaded image"}`)
 	return
 }}
 

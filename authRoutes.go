@@ -28,6 +28,12 @@ var register = web.Route{"POST", "/register", func(w http.ResponseWriter, r *htt
 		return
 	}
 
+	db.TestQuery("user", &users, adb.Eq("username", user.Username))
+	if len(users) > 0 {
+		web.SetErrorRedirect(w, r, "/login", "Error registering. Username is already in use.")
+		return
+	}
+
 	// create user
 	user.Id = genId()
 	user.Active = true
@@ -86,6 +92,9 @@ var loginPost = web.Route{"POST", "/login", func(w http.ResponseWriter, r *http.
 	sess.PutId(w, user.Id)
 	sess["EMAIL"] = user.Email
 	web.PutMultiSess(w, r, sess)
+
+	user.LastSeen = time.Now().Unix()
+	db.Set("user", user.Id, user)
 
 	// redirect with message
 	web.SetSuccessRedirect(w, r, "/project", "Welcome "+user.FirstName)

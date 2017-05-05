@@ -111,6 +111,7 @@ var accountSave = web.Route{"POST", "/account", func(w http.ResponseWriter, r *h
 	if r.FormValue("password") == "" {
 		r.Form.Set("password", user.Password)
 	}
+
 	if errs, ok := web.FormToStruct(&user, r.Form, "account"); !ok {
 		web.SetFormErrors(w, errs)
 		web.SetErrorRedirect(w, r, "/account", "Error updating account information")
@@ -122,6 +123,12 @@ var accountSave = web.Route{"POST", "/account", func(w http.ResponseWriter, r *h
 	db.TestQuery("user", &users, adb.Eq("email", user.Email), adb.Ne("id", `"`+user.Id+`"`))
 	if len(users) > 0 {
 		web.SetErrorRedirect(w, r, "/account", "Error updating account information.\nEmail is already in use.")
+		return
+	}
+
+	db.TestQuery("user", &users, adb.Eq("username", user.Username), adb.Ne("id", `"`+user.Id+`"`))
+	if len(users) > 0 {
+		web.SetErrorRedirect(w, r, "/account", "Error updating account information.\nUsername is already in use.")
 		return
 	}
 

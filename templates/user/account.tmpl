@@ -7,7 +7,7 @@
     </head>
     <body>
 
-        {{ template "secure-navbar.tmpl" . }}
+        {{ template "navbar-secure.tmpl" . }}
 
         <div class="container">
             <div class="row">
@@ -37,6 +37,13 @@
                                     <div class="col-xs-8">
                                         <span class="text-danger">{{ getFormError .formErrors "account.email" }}</span>
                                         <input class="form-control" type="email" name="email" value="{{ .user.Email }}">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-xs-4">Username</label>
+                                    <div class="col-xs-8">
+                                        <span class="text-danger">{{ getFormError .formErrors "account.username" }}</span>
+                                        <input class="form-control" type="text" name="username" value="{{ .user.Username }}">
                                     </div>
                                 </div>
                                 <!-- toggle show password input -->

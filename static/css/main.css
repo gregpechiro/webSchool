@@ -6,3 +6,39 @@
     padding-right: 0;
     padding-left: 0;
 }
+
+.no-pad {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.no-marg {
+    margin-right: 0;
+     margin-left: 0; 
+}
+
+.btn-bottom-right {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.btn-bottom-left {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.no-round-top {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.no-round-bottom {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.project {
+    margin-bottom: 0;
+}

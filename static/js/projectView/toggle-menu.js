@@ -13,4 +13,8 @@ $(document).ready(function() {
         parent.removeClass('menu-close');
         parent.addClass('menu-open');
     });
+
+    var closed = $('.side.menu-close');
+    closed.find('.content').addClass('hide');
+    closed.find('.alt').removeClass('hide');
 });

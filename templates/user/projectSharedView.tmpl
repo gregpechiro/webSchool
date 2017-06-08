@@ -8,12 +8,10 @@
         <link href='//cdn.jsdelivr.net/devicons/1.8.0/css/devicons.min.css' rel='stylesheet'>
         <script src="/static/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
         <script src="/static/js/src-min-noconflict/ext-language_tools.js"></script>
+
         <script>
-            /*TogetherJSConfig_on = {
-                ready: function() {
-                    createShare();
-                }
-            };*/
+            // TogetherJS configuration would go here, but we'll talk about that
+            // later
             TogetherJSConfig_cloneClicks = true;
         </script>
         <script src="https://togetherjs.com/togetherjs-min.js"></script>
@@ -169,7 +167,7 @@
                 <div>
                     <button id="reset" class="btn btn-danger btn-sm btn-block">Reset</button>
                 </div>
-                <button id="together">Start TogetherJS</button>
+                <button onclick="TogetherJS(this); return false;">Start TogetherJS</button>
             </div>
         </div>
         <div class="middle" style="border:1px solid black">
@@ -253,7 +251,7 @@
         <script src="/static/js/upload.js" charset="utf-8"></script>
         <script type="text/javascript">
             var project = '{{ .project }}';
-            var sharePre = '#&togetherjs=';
+            var shareId = '{{ .shareId }}';
 
             // var host = 'http://{{ .user.Username }}.school.xiphoid24.com';
             var host = 'http://{{ .user.Username }}.temp.school.localhost:9999';
@@ -268,74 +266,13 @@
                 uploader.reset($('form#uploader'));
             });
 
-
-
-            $('button#together').click(function() {
-                createShare();
-
-
-
-                /*var shareUrl = TogetherJS.shareUrl();
-                var id = shareUrl.slice(shareUrl.indexOf(sharePre)+sharePre.length);
-                $.ajax({
-                    url: '/project/share/' + project,
-                    method: 'POST',
-                    data: {
-                        id: id,
-                        userId: '{{ .user.Id }}',
-                        projectName: project,
-                        invites: '["brineryte@gmail.com"]',
-                        uRL: shareUrl
-                    },
-                    success: function(resp) {
-                        if (resp.error) {
-                            alert('ERROR: ' + resp.output);
-                            return
-                        }
-                        alert(resp.output);
-                    },
-                    error: function(e, d) {
-                        console.log(e);
-                        console.log(d);
-                    }
-                });*/
-
-
-            });
-
-            function createShare() {
-                // var shareUrl = TogetherJS.shareUrl();
-                $.ajax({
-                    url: '/project/share/' + project,
-                    method: 'POST',
-                    data: {
-                        userId: '{{ .user.Id }}',
-                        projectName: project,
-                        invites: 'brineryte@gmail.com'
-                    },
-                    success: function(resp) {
-                        if (resp.error) {
-                            alert('ERROR: ' + resp.output);
-                            return
-                        }
-                        alert(resp.output);
-                        window.history.pushState({}, project, '/project/share/' + project + '/' + resp.shareId);
-                        TogetherJS();
-                    },
-                    error: function(e, d) {
-                        console.log(e);
-                        console.log(d);
-                    }
-                });
-            }
-
         </script>
-        <script src="/static/js/projectView/toggle-menu.js" charset="utf-8"></script>
-        <script src="/static/js/projectView/util.js" charset="utf-8"></script>
-        <script src="/static/js/projectView/memFile.js" charset="utf-8"></script>
-        <script src="/static/js/projectView/main.js" charset="utf-8"></script>
-        <script src="/static/js/projectView/jstree.js" charset="utf-8"></script>
-        <script src="/static/js/projectView/editor.js" charset="utf-8"></script>
-        <script src="/static/js/projectView/settings.js" charset="utf-8"></script>
+        <script src="/static/js/projectSharedView/toggle-menu.js" charset="utf-8"></script>
+        <script src="/static/js/projectSharedView/util.js" charset="utf-8"></script>
+        <script src="/static/js/projectSharedView/memFile.js" charset="utf-8"></script>
+        <script src="/static/js/projectSharedView/main.js" charset="utf-8"></script>
+        <script src="/static/js/projectSharedView/jstree.js" charset="utf-8"></script>
+        <script src="/static/js/projectSharedView/editor.js" charset="utf-8"></script>
+        <script src="/static/js/projectSharedView/settings.js" charset="utf-8"></script>
     </body>
 </html>

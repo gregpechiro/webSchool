@@ -10,111 +10,82 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/cagnosolutions/web"
 )
 
-var projectView = web.Route{"GET", "/project/:name", func(w http.ResponseWriter, r *http.Request) {
+var projectShareNew = web.Route{"POST", "/project/share/:name", func(w http.ResponseWriter, r *http.Request) {
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
-	// NOTE: check for project here
-	tmpl.Render(w, r, "projectView.tmpl", web.Model{
+	r.ParseForm()
+	var sharedProject SharedProject
+	web.FormToStruct(&sharedProject, r.Form, "")
+	project := r.FormValue(":name")
+	if project == "" {
+		ajaxResponse(w, `{"error":true,"output":"Error sharing project"}`)
+		return
+	}
+
+	sharedProject.Created = time.Now().UnixNano()
+	sharedProject.Id = genId()
+	db.Set("sharedProject", sharedProject.Id, sharedProject)
+
+	ajaxResponse(w, `{"error":false,"output":"Successfully started share","shareId":"`+sharedProject.Id+`"}`)
+	return
+}}
+
+var projectShareView = web.Route{"GET", "/project/share/:name/:shareId", func(w http.ResponseWriter, r *http.Request) {
+	id := web.GetId(r)
+	var user User
+	if !db.Get("user", id, &user) {
+		web.Logout(w)
+		web.SetErrorRedirect(w, r, "/login", "Error finding user")
+	}
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		//web.SetErrorRedirect(w, r, "/project", "You are not allowed to access this shared project")
+		return
+	}
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+
+		web.SetErrorRedirect(w, r, "/project", "You are not allowed to access this shared project")
+		return
+	}*/
+	tmpl.Render(w, r, "projectSharedView.tmpl", web.Model{
 		"user":    user,
 		"project": r.FormValue(":name"),
+		"shareId": r.FormValue(":shareId"),
 		"themes":  themes,
 	})
 	return
 }}
 
-var projectRename = web.Route{"POST", "/project/:name/rename", func(w http.ResponseWriter, r *http.Request) {
+var projectShareFiles = web.Route{"GET", "/project/share/:name/files/:shareId", func(w http.ResponseWriter, r *http.Request) {
+
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
-	name := r.FormValue(":name")
-	if name == "" {
-		web.SetErrorRedirect(w, r, "/project", "Project name cannot be empty")
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		fmt.Println("Error getting project", r.FormValue(":shareId"))
+		ajaxResponse(w, `{"id":"#","Children":false}`)
 		return
 	}
-	newName := r.FormValue("newName")
-	if name == "" {
-		web.SetErrorRedirect(w, r, "/project", "Project name cannot be empty")
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+		ajaxResponse(w, `{"id":"#","Children":false}`)
 		return
-	}
-
-	if name == newName {
-		web.SetErrorRedirect(w, r, "/project", "New project name must be different than original project name")
-	}
-
-	path := "projects/" + id + "/" + name
-	newPath := "projects/" + id + "/" + newName
-
-	if _, err := os.Stat(path); err != nil {
-		web.SetErrorRedirect(w, r, "/project", "Error finding project")
-		return
-	}
-
-	_, err := os.Stat(newPath)
-	if err == nil {
-		web.SetErrorRedirect(w, r, "/project", "That project name is already taken")
-		return
-	}
-
-	if os.IsNotExist(err) {
-		web.SetErrorRedirect(w, r, "/project", "Error creating new project")
-		return
-	}
-
-	if err := os.Rename(path, newPath); err != nil {
-		web.SetErrorRedirect(w, r, "/project", "Error renaming project")
-		return
-	}
-
-	web.SetSuccessRedirect(w, r, "/project", "Successfully renamed project")
-	return
-}}
-
-var projectDel = web.Route{"POST", "/project/:name/del", func(w http.ResponseWriter, r *http.Request) {
-	id := web.GetId(r)
-	var user User
-	if !db.Get("user", id, &user) {
-		web.Logout(w)
-		web.SetErrorRedirect(w, r, "/login", "Error finding user")
-	}
-	name := r.FormValue(":name")
-	if name == "" {
-		web.SetErrorRedirect(w, r, "/project", "Project name cannot be empty")
-		return
-	}
-
-	path := "projects/" + id + "/" + r.FormValue(":name")
-
-	if err := os.RemoveAll(path); err != nil {
-		web.SetErrorRedirect(w, r, "/project", "Error deleting project")
-		return
-	}
-
-	web.SetSuccessRedirect(w, r, "/project", "Successfully deleted project")
-	return
-
-}}
-
-var projectFiles = web.Route{"GET", "/project/:name/files", func(w http.ResponseWriter, r *http.Request) {
-	id := web.GetId(r)
-	var user User
-	if !db.Get("user", id, &user) {
-		web.Logout(w)
-		web.SetErrorRedirect(w, r, "/login", "Error finding user")
-	}
+	}*/
 	path, _ := url.QueryUnescape(r.FormValue("path"))
 
-	prePath := "./projects/" + id + "/" + r.FormValue(":name")
+	prePath := "./projects/" + sharedProject.UserId + "/" + r.FormValue(":name")
 
 	files, err := ioutil.ReadDir(prePath + "/" + path)
 	if err != nil {
@@ -149,21 +120,29 @@ var projectFiles = web.Route{"GET", "/project/:name/files", func(w http.Response
 	return
 }}
 
-var projectFolderNew = web.Route{"POST", "/project/:name/mkdir", func(w http.ResponseWriter, r *http.Request) {
+var projectShareFolderNew = web.Route{"POST", "/project/share/:name/mkdir/:shareId", func(w http.ResponseWriter, r *http.Request) {
+
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}*/
 	if r.FormValue(":name") == "" {
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
 		ajaxResponse(w, `{"error":true,"output":"Error creating new folder"}`)
 		return
 	}
 	if r.FormValue("folder") == "" {
 
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
 		ajaxResponse(w, `{"error":true,"output":"Error creating new folder"}`)
 		return
 	}
@@ -171,32 +150,38 @@ var projectFolderNew = web.Route{"POST", "/project/:name/mkdir", func(w http.Res
 	if p == "#" {
 		p = ""
 	}
-	path := "projects/" + id + "/" + r.FormValue(":name") + "/" + p
+	path := "projects/" + sharedProject.UserId + "/" + r.FormValue(":name") + "/" + p
 
 	if err := os.MkdirAll(path+"/"+r.FormValue("folder"), 0755); err != nil {
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new folder")
 		ajaxResponse(w, `{"error":true,"output":"Error creating new folder"}`)
 		return
 	}
-	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully created new folder")
 	ajaxResponse(w, `{"error":false,"output":"Successfully created new folder"}`)
 	return
 }}
 
-var projectFileNew = web.Route{"POST", "/project/:name/addFile", func(w http.ResponseWriter, r *http.Request) {
+var projectShareFileNew = web.Route{"POST", "/project/share/:name/addFile/:shareId", func(w http.ResponseWriter, r *http.Request) {
+
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}*/
 	if r.FormValue(":name") == "" {
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating file file")
 		ajaxResponse(w, `{"error":true,"output":"Error creating new file"}`)
 		return
 	}
 	if r.FormValue("file") == "" {
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new file")
 		ajaxResponse(w, `{"error":true,"output":"Error creating new file"}`)
 		return
 	}
@@ -204,39 +189,46 @@ var projectFileNew = web.Route{"POST", "/project/:name/addFile", func(w http.Res
 	if p == "#" {
 		p = ""
 	}
-	path := "projects/" + id + "/" + r.FormValue(":name") + "/" + p
+	path := "projects/" + sharedProject.UserId + "/" + r.FormValue(":name") + "/" + p
 
 	f, err := os.Create(path + "/" + r.FormValue("file"))
 	if err != nil {
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error creating new file")
 		ajaxResponse(w, `{"error":true,"output":"Error creating new file"}`)
 		return
 	}
 	f.Close()
 
-	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully created new file")
 	ajaxResponse(w, `{"error":false,"output":"Successfully created new file"}`)
 	return
 }}
 
-var projectUploadImage = web.Route{"POST", "/project/:name/upload", func(w http.ResponseWriter, r *http.Request) {
+var projectShareUploadImage = web.Route{"POST", "/project/share/:name/upload/:shareId", func(w http.ResponseWriter, r *http.Request) {
+
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}*/
 
 	p, _ := url.QueryUnescape(r.FormValue("path"))
 	if p == "#" {
 		p = ""
 	}
-	path := "projects/" + id + "/" + r.FormValue(":name") + p
+	path := "projects/" + sharedProject.UserId + "/" + r.FormValue(":name") + p
 
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		log.Printf("projectRoutes.go >> projectUploadImage >> r.FormFile() >> %v\n", err)
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error uploading image")
 		ajaxResponse(w, `{"error":true,"output":"Error uploading image"}`)
 		return
 	}
@@ -245,7 +237,6 @@ var projectUploadImage = web.Route{"POST", "/project/:name/upload", func(w http.
 	f, err := os.OpenFile(path+"/"+handler.Filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Printf("projectRoutes.go >> projectUploadImage >> os.OpenFile() >> %v\n", err)
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error uploading image")
 		ajaxResponse(w, `{"error":true,"output":"Error uploading image"}`)
 		return
 	}
@@ -253,30 +244,38 @@ var projectUploadImage = web.Route{"POST", "/project/:name/upload", func(w http.
 	defer f.Close()
 	if _, err := io.Copy(f, file); err != nil {
 		log.Printf("projectRoutes.go >> projectUploadImage >> io.Copy() >> %v\n", err)
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error uploading image")
 		ajaxResponse(w, `{"error":true,"output":"Error uploading image"}`)
 		return
 	}
 
-	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfuly uploaded image")
 	ajaxResponse(w, `{"error":false,"output":"Successfully uploaded image"}`)
 	return
 }}
 
-var projectFileDel = web.Route{"POST", "/project/:name/file/del", func(w http.ResponseWriter, r *http.Request) {
+var projectShareFileDel = web.Route{"POST", "/project/share/:name/file/del/:shareId", func(w http.ResponseWriter, r *http.Request) {
+
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}*/
 	if r.FormValue("path") == "" {
 		ajaxResponse(w, `{"error":true,"output":"Error deleting file/folder"}`)
 		return
 	}
 
 	p, _ := url.QueryUnescape(r.FormValue("path"))
-	path := "projects/" + id + "/" + r.FormValue(":name") + p
+	path := "projects/" + sharedProject.UserId + "/" + r.FormValue(":name") + p
 
 	if err := os.RemoveAll(path); err != nil {
 		ajaxResponse(w, `{"error":true,"output":"Error deleting file/folder"}`)
@@ -286,44 +285,61 @@ var projectFileDel = web.Route{"POST", "/project/:name/file/del", func(w http.Re
 	return
 }}
 
-var projectFileMove = web.Route{"POST", "/project/:name/file/move", func(w http.ResponseWriter, r *http.Request) {
+var projectShareFileMove = web.Route{"POST", "/project/share/:name/file/move/:shareId", func(w http.ResponseWriter, r *http.Request) {
+
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}*/
 
-	path := "projects/" + id + "/" + r.FormValue(":name")
+	path := "projects/" + sharedProject.UserId + "/" + r.FormValue(":name")
 	from, _ := url.QueryUnescape(r.FormValue("from"))
 	to, _ := url.QueryUnescape(r.FormValue("to"))
 	if from == "" || to == "" {
 		log.Printf("projectRoutes.go >> projectFileMove >> FROM: %s, TO: %s\n\n", from, to)
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error "+r.FormValue("type")+"ing file/folder")
 		ajaxResponse(w, `{"error":true,"output":"Error `+r.FormValue("type")+`ing file/folder}`)
 		return
 	}
 
 	if err := os.Rename(path+from, path+to); err != nil {
 		log.Printf("projectRoutes.go >> projectFileMove >> os.Rename() >> %v\n\n", err)
-		// web.SetErrorRedirect(w, r, "/project/"+r.FormValue(":name"), "Error "+r.FormValue("type")+"ing file/folder")
 		ajaxResponse(w, `{"error":true,"output":"Error `+r.FormValue("type")+`ing file/folder}`)
 		return
 	}
-	// web.SetSuccessRedirect(w, r, "/project/"+r.FormValue(":name"), "Successfully "+r.FormValue("type")+"ed file/folder")
 	ajaxResponse(w, `{"error":false,"output":"Successfully `+r.FormValue("type")+`ed file/folder"}`)
 	return
 }}
 
-var projectFile = web.Route{"GET", "/project/:name/file", func(w http.ResponseWriter, r *http.Request) {
+var projectShareFile = web.Route{"GET", "/project/share/:name/file/:shareId", func(w http.ResponseWriter, r *http.Request) {
+
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}*/
 	p, _ := url.QueryUnescape(r.FormValue("path"))
-	path := "projects/" + id + "/" + r.FormValue(":name") + p
+	path := "projects/" + sharedProject.UserId + "/" + r.FormValue(":name") + p
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Printf("projectRoutes.go >> projectFile >> ioutil.ReadFile() >> %v\n\n", err)
@@ -335,16 +351,26 @@ var projectFile = web.Route{"GET", "/project/:name/file", func(w http.ResponseWr
 	return
 }}
 
-var projectFileSave = web.Route{"POST", "/project/:name/file/save", func(w http.ResponseWriter, r *http.Request) {
+var projectShareFileSave = web.Route{"POST", "/project/share/:name/file/save/:shareId", func(w http.ResponseWriter, r *http.Request) {
+
 	id := web.GetId(r)
 	var user User
 	if !db.Get("user", id, &user) {
 		web.Logout(w)
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
+	var sharedProject SharedProject
+	if !db.Get("sharedProject", r.FormValue(":shareId"), &sharedProject) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}
+	/*if !sharedProject.IsInvited(user.Username, user.Email) {
+		ajaxResponse(w, `{"error":true,"output":"You are not allowed to access this shared project"}`)
+		return
+	}*/
 
 	p, _ := url.QueryUnescape(r.FormValue("path"))
-	path := "projects/" + id + "/" + r.FormValue(":name") + p
+	path := "projects/" + sharedProject.UserId + "/" + r.FormValue(":name") + p
 
 	data := r.FormValue("data")
 

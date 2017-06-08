@@ -105,7 +105,7 @@ $(document).ready(function() {
     $('button#upload').click(function() {
         var formData = new FormData($('#uploader')[0]);
         $.ajax({
-            url: '/project/' + project + '/upload',
+            url: '/project/share/' + project + '/upload/' + shareId,
             method: 'POST',
             cache: false,
             contentType: false,
@@ -145,7 +145,7 @@ function getFile(id) {
     }
 
     $.ajax({
-        url: '/project/' + project + '/file?path=' + id,
+        url: '/project/share/' + project + '/file/' + shareId + '?path=' + id,
         method: 'GET',
         success: function(resp) {
             // check for returned error
@@ -263,7 +263,7 @@ function newFile(id) {
 
 function newFileSubmit() {
     $.ajax({
-        url: '/project/' + project + '/addFile',
+        url: '/project/share/' + project + '/addFile/' + shareId,
         method: 'POST',
         data: formToObject($('#newFileForm')),
         success: function(resp) {
@@ -313,7 +313,7 @@ function newFolder(id) {
 
 function newFolderSubmit() {
     $.ajax({
-        url: '/project/' + project + '/mkdir',
+        url: '/project/share/' + project + '/mkdir/' + shareId,
         method: 'POST',
         data: formToObject($('#newFolderForm')),
         success: function(resp) {

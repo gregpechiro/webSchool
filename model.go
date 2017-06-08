@@ -13,6 +13,24 @@ type User struct {
 	LastSeen  int64  `json:"lastSeen,omitempty"`
 }
 
+type SharedProject struct {
+	Id          string   `json:"id"`
+	UserId      string   `json:"userId"`
+	ProjectName string   `json:"projectName"`
+	Invites     []string `json:"invites"`
+	URL         string   `json:"url"`
+	Created     int64    `json:"created"`
+}
+
+func (s SharedProject) IsInvited(username, email string) bool {
+	for _, n := range s.Invites {
+		if n == username || n == email {
+			return true
+		}
+	}
+	return false
+}
+
 type FileStats struct {
 	Name     string
 	Size     string

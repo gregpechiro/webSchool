@@ -15,12 +15,13 @@ var tmpl *web.TmplCache
 var mux *web.Mux
 var db *adb.DB = adb.NewDB()
 
-// const HOST = "http://localhost:9999"
+const HOST = "http://localhost:9999"
 
-const HOST = "http://school.xiphoid24.com"
+// const HOST = "http://school.xiphoid24.com"
 
 func init() {
 	db.AddStore("user")
+	db.AddStore("sharedProject")
 
 	web.SESSDUR = 45 * time.Minute
 
@@ -46,8 +47,12 @@ func init() {
 
 	// user routes
 	mux.AddSecureRoutes(USER, project, projectNew, projectDel, account, accountSave)
+
 	mux.AddSecureRoutes(USER, projectRename, projectView, projectFiles, projectFile, projectFolderNew)
 	mux.AddSecureRoutes(USER, projectFileNew, projectFileDel, projectFileMove, projectFileSave, projectUploadImage)
+
+	mux.AddSecureRoutes(USER, projectShareNew, projectShareView, projectShareFiles, projectShareFile, projectShareFolderNew)
+	mux.AddSecureRoutes(USER, projectShareFileNew, projectShareFileDel, projectShareFileMove, projectShareFileSave, projectShareUploadImage)
 
 	// admin routes
 	mux.AddSecureRoutes(ADMIN, adminHome, adminUser, adminUserOne, adminUserSave, adminUserDel)

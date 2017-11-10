@@ -23,19 +23,22 @@ var projectShareNew = web.Route{"POST", "/project/share/:name", func(w http.Resp
 		web.SetErrorRedirect(w, r, "/login", "Error finding user")
 	}
 	r.ParseForm()
-	var sharedProject SharedProject
-	web.FormToStruct(&sharedProject, r.Form, "")
+
 	project := r.FormValue(":name")
 	if project == "" {
 		ajaxResponse(w, `{"error":true,"output":"Error sharing project"}`)
 		return
 	}
 
+	var sharedProject SharedProject
+
 	sharedProject.Created = time.Now().UnixNano()
 	sharedProject.Id = genId()
+	sharedProject.UserId = id
+	sharedProject.ProjectName = project
 	db.Set("sharedProject", sharedProject.Id, sharedProject)
 
-	ajaxResponse(w, `{"error":false,"output":"Successfully started share","shareId":"`+sharedProject.Id+`"}`)
+	ajaxResponse(w, fmt.Sprintf(`{"error":false,"output":"/project/share/%s/%s"}`, sharedProject.ProjectName, sharedProject.Id))
 	return
 }}
 
@@ -61,6 +64,7 @@ var projectShareView = web.Route{"GET", "/project/share/:name/:shareId", func(w 
 		"project": r.FormValue(":name"),
 		"shareId": r.FormValue(":shareId"),
 		"themes":  themes,
+		"owner":   id == sharedProject.UserId,
 	})
 	return
 }}

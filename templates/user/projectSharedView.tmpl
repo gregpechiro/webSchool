@@ -10,9 +10,14 @@
         <script src="/static/js/src-min-noconflict/ext-language_tools.js"></script>
 
         <script>
-            // TogetherJS configuration would go here, but we'll talk about that
-            // later
+            const owner = {{ .owner }};
             TogetherJSConfig_cloneClicks = true;
+            TogetherJSConfig_suppressJoinConfirmation = true;
+            TogetherJSConfig_ignoreForms = [];
+            if (!owner) {
+                TogetherJSConfig_autoStart = true;
+            }
+
         </script>
         <script src="https://togetherjs.com/togetherjs-min.js"></script>
 
@@ -167,7 +172,6 @@
                 <div>
                     <button id="reset" class="btn btn-danger btn-sm btn-block">Reset</button>
                 </div>
-                <button onclick="TogetherJS(this); return false;">Start TogetherJS</button>
             </div>
         </div>
         <div class="middle" style="border:1px solid black">
@@ -250,11 +254,11 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
         <script src="/static/js/upload.js" charset="utf-8"></script>
         <script type="text/javascript">
-            var project = '{{ .project }}';
-            var shareId = '{{ .shareId }}';
+            const project = '{{ .project }}';
+            const shareId = '{{ .shareId }}';
 
-            // var host = 'http://{{ .user.Username }}.school.xiphoid24.com';
-            var host = 'http://{{ .user.Username }}.temp.school.localhost:9999';
+            // const host = 'http://{{ .user.Username }}.school.xiphoid24.com';
+            const host = 'http://{{ .user.Username }}.temp.school.localhost:9999';
             uploader.displayError = function(msg) {
                 $.Notification.autoHideNotify('error', 'top right', msg);
             }
@@ -265,6 +269,10 @@
             $('#uploadModal').on('hidden.bs.modal', function () {
                 uploader.reset($('form#uploader'));
             });
+
+            if (owner) {
+                TogetherJS();
+            }
 
         </script>
         <script src="/static/js/projectSharedView/toggle-menu.js" charset="utf-8"></script>

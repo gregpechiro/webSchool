@@ -8,17 +8,6 @@
         <link href='//cdn.jsdelivr.net/devicons/1.8.0/css/devicons.min.css' rel='stylesheet'>
         <script src="/static/js/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
         <script src="/static/js/src-min-noconflict/ext-language_tools.js"></script>
-        <script>
-            /*TogetherJSConfig_on = {
-                ready: function() {
-                    createShare();
-                }
-            };*/
-            TogetherJSConfig_cloneClicks = true;
-        </script>
-        <script src="https://togetherjs.com/togetherjs-min.js"></script>
-
-
         <style>input.uploader{position:absolute;left:-9999px;}label.uploader{cursor:pointer;}</style>
 
         <style media="screen">
@@ -271,39 +260,24 @@
 
 
             $('button#together').click(function() {
-                createShare();
-
-
-
-                /*var shareUrl = TogetherJS.shareUrl();
-                var id = shareUrl.slice(shareUrl.indexOf(sharePre)+sharePre.length);
                 $.ajax({
                     url: '/project/share/' + project,
                     method: 'POST',
-                    data: {
-                        id: id,
-                        userId: '{{ .user.Id }}',
-                        projectName: project,
-                        invites: '["brineryte@gmail.com"]',
-                        uRL: shareUrl
-                    },
                     success: function(resp) {
                         if (resp.error) {
                             alert('ERROR: ' + resp.output);
                             return
                         }
-                        alert(resp.output);
+                        window.location.href = resp.output;
                     },
                     error: function(e, d) {
                         console.log(e);
                         console.log(d);
                     }
-                });*/
-
-
+                });
             });
 
-            function createShare() {
+            /*function createShare() {
                 // var shareUrl = TogetherJS.shareUrl();
                 $.ajax({
                     url: '/project/share/' + project,
@@ -327,7 +301,7 @@
                         console.log(d);
                     }
                 });
-            }
+            }*/
 
         </script>
         <script src="/static/js/projectView/toggle-menu.js" charset="utf-8"></script>
